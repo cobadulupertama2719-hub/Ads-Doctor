@@ -5,19 +5,19 @@ import numpy as np
 from datetime import datetime, timedelta
 import hashlib
 
-st.set_page_config(page_title="Ads Doctor Premium - TikTok & Shopee", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="DOCTOR ADS SHOPEE & TIKTOK Premium - TikTok & Shopee", page_icon="🩺", layout="wide")
 
 # ==================== KONFIGURASI ====================
 ADMIN_USERNAME = "arkidigital"
-ADMIN_PASSWORD = "Arkidigital2024"
+ADMIN_PASSWORD = "Arkidigital2026"
 
 # Nomor WhatsApp Mas
 WA_NUMBER = "6288228878258"
 WA_LINK = f"https://wa.me/{WA_NUMBER}?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
 
 # Konfigurasi Demo
-DEMO_DURATION_MINUTES = 7  # 7 menit demo
-MAX_DEMO_ANALYSIS = 3  # Maks 3 kali analisis di mode demo
+DEMO_DURATION_MINUTES = 7  # 5 menit demo
+MAX_DEMO_ANALYSIS = 3  # Maks 2 kali analisis di mode demo
 MAX_DEMO_GENERATOR = 2  # Maks 2 kali generate di mode demo
 
 # ==================== FUNGSI DEMO DENGAN LIMIT PER AKUN ====================
@@ -172,7 +172,7 @@ def show_login_or_demo():
                     st.error("❌ Username atau password salah!")
     
     with col2:
-        st.markdown("### 🎁 **Coba Demo 7 Menit**")
+        st.markdown("### 🎁 **Coba Demo 5 Menit**")
         st.markdown(f"""
         <div style="background: #f0f0ff; padding: 1rem; border-radius: 0.8rem;">
             <small>✅ Gratis 7 menit akses penuh<br>
