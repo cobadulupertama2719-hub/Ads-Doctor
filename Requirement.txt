@@ -2,4 +2,3 @@ streamlit
 pandas
 numpy
 openpyxl
-et_xmlfile
