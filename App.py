@@ -1,293 +1,394 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
-from datetime import datetime
 
-st.set_page_config(page_title="Ads Doctor - TikTok Ads", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="Ads Doctor - Manual Input", page_icon="🩺", layout="wide")
 
+# Custom CSS
 st.markdown("""
 <style>
     .main-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1rem;
+        padding: 1.5rem;
         border-radius: 1rem;
         color: white;
         text-align: center;
         margin-bottom: 2rem;
     }
-    .danger-card {
+    .result-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+    .danger {
         background: #fee2e2;
         border-left: 4px solid #ef4444;
         padding: 1rem;
         border-radius: 0.5rem;
-        margin: 1rem 0;
     }
-    .warning-card {
+    .warning {
         background: #fff3cd;
         border-left: 4px solid #ffc107;
         padding: 1rem;
         border-radius: 0.5rem;
-        margin: 1rem 0;
     }
-    .success-card {
+    .success {
         background: #d1fae5;
         border-left: 4px solid #10b981;
         padding: 1rem;
         border-radius: 0.5rem;
-        margin: 1rem 0;
+    }
+    .info {
+        background: #dbeafe;
+        border-left: 4px solid #3b82f6;
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+    .metric-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1rem;
+        border-radius: 0.75rem;
+        color: white;
+        text-align: center;
     }
 </style>
 """, unsafe_allow_html=True)
 
+# Header
 st.markdown("""
 <div class="main-header">
-    <h1>🩺 Ads Doctor - TikTok Ads</h1>
-    <p>Upload file Excel dari TikTok Ads → Analisis Otomatis + Rekomendasi Perbaikan</p>
+    <h1>🩺 Ads Doctor - Manual Input</h1>
+    <p>Isi data iklan Anda → Langsung Dapat Rekomendasi & Solusi</p>
 </div>
 """, unsafe_allow_html=True)
 
 # Sidebar
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/000000/tiktok.png", width=60)
-    st.markdown("## ⚙️ Pengaturan")
-    bep = st.number_input("🎯 ROAS BEP (target minimal)", value=5.0, step=0.5)
-    ctr_threshold = st.slider("📊 Minimal CTR (%)", 0.5, 5.0, 2.0, 0.5)
+    st.image("https://img.icons8.com/color/96/000000/advertising.png", width=60)
+    st.markdown("## ⚙️ Target Bisnis")
+    bep_roas = st.number_input("🎯 ROAS BEP (target minimal)", value=5.0, step=0.5,
+                                help="Contoh: 5 artinya setiap Rp1 iklan harus hasilkan Rp5 penjualan")
     st.markdown("---")
-    st.caption("📌 Support file Excel (.xlsx) dari TikTok Ads")
+    st.caption("💡 Tips: ROAS BEP = Harga Jual ÷ (Harga Jual - HPP - Admin)")
 
-# Upload file
-uploaded = st.file_uploader("📂 Upload file Excel dari TikTok Ads", type=["xlsx", "csv"])
+# ==================== FORM INPUT ====================
+st.subheader("📝 Input Data Iklan Hari Ini")
 
-if uploaded:
-    with st.spinner("🔍 Menganalisis data TikTok..."):
-        # Baca file
-        if uploaded.name.endswith('.xlsx'):
-            df = pd.read_excel(uploaded, sheet_name=0)
-        else:
-            df = pd.read_csv(uploaded)
-        
-        # ==================== MAPPING KOLOM TIKTOK (SESUAI FILE MAS) ====================
-        # Mapping dari kolom asli TikTok ke nama standar
-        mapping_kolom = {
-            'Nama kampanye': 'campaign',
-            'Biaya': 'spend',
-            'Pesanan SKU': 'orders',
-            'Pendapatan kotor': 'sales',
-            'Impresi iklan produk': 'impressions',
-            'Jumlah klik iklan produk': 'clicks',
-            'Tingkat klik iklan produk': 'ctr_raw',
-            'Rasio konversi iklan': 'cvr_raw',
-            'ROI': 'roi',
-            'Biaya per pesanan': 'cpa',
-            'Jenis materi iklan': 'ad_type',
-            'Judul video': 'video_title',
-            'Akun TikTok': 'tiktok_account'
-        }
-        
-        for old_name, new_name in mapping_kolom.items():
-            if old_name in df.columns:
-                df.rename(columns={old_name: new_name}, inplace=True)
-        
-        # Cek kolom wajib
-        required = ['impressions', 'clicks', 'spend', 'sales']
-        missing = [r for r in required if r not in df.columns]
-        
-        if missing:
-            st.error(f"❌ Kolom tidak ditemukan: {missing}")
-            st.info(f"Kolom yang tersedia: {list(df.columns)}")
-            st.stop()
-        
-        # Konversi ke numeric
-        for col in ['impressions', 'clicks', 'spend', 'sales', 'orders']:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
-        
-        # Filter data valid
-        df_valid = df[df['impressions'] > 0].copy()
-        
-        if len(df_valid) == 0:
-            st.warning("⚠️ Tidak ada data dengan impressions > 0")
-            st.stop()
-        
-        # Hitung metrik
-        df_valid['CTR'] = (df_valid['clicks'] / df_valid['impressions'] * 100).round(2)
-        df_valid['ROAS'] = (df_valid['sales'] / df_valid['spend'].replace(0, np.nan)).round(2)
-        df_valid['CPC'] = (df_valid['spend'] / df_valid['clicks'].replace(0, np.nan)).round(0)
-        
-        if 'orders' in df_valid.columns:
-            df_valid['CVR'] = (df_valid['orders'] / df_valid['clicks'].replace(0, np.nan) * 100).round(2)
-        
-        df_valid['BEP'] = bep
-        
-        # ==================== FUNGSI ANALISIS ====================
-        def analisis(row):
-            rekomendasi = []
-            prioritas = 4
-            masalah = []
-            
-            # CTR rendah
-            if row['CTR'] < ctr_threshold:
-                rekomendasi.append(f"🔴 Ganti visual/hook (CTR {row['CTR']}% < {ctr_threshold}%)")
-                masalah.append("CTR Rendah")
-                prioritas = 1
-            
-            # ROAS di bawah BEP
-            if pd.notna(row['ROAS']) and row['ROAS'] < row['BEP']:
-                rekomendasi.append(f"🟠 ROAS {row['ROAS']} < BEP {row['BEP']} → Naikkan target ROAS")
-                masalah.append("ROAS Rendah")
-                prioritas = min(prioritas, 2)
-            elif pd.notna(row['ROAS']) and row['ROAS'] >= row['BEP'] * 1.5:
-                rekomendasi.append(f"🏆 ROAS {row['ROAS']} > 1.5x BEP (Excellent!)")
-                masalah.append("Performa Bagus")
-                prioritas = min(prioritas, 3)
-            
-            # Klik banyak tapi order 0
-            if 'orders' in df_valid.columns:
-                if row['clicks'] > 30 and row['orders'] == 0:
-                    rekomendasi.append(f"🟠 {row['clicks']:.0f} klik tapi 0 order → Cek produk")
-                    masalah.append("Konversi 0%")
-                    prioritas = min(prioritas, 1)
-            
-            # Iklan tidak terserap
-            if row['impressions'] < 1000 and row['spend'] < 50000:
-                rekomendasi.append("🎯 Iklan tidak terserap → Turunkan target ROAS")
-                masalah.append("Tidak Terserap")
-                prioritas = min(prioritas, 2)
-            
-            # Jangkauan sempit
-            if row['impressions'] < 5000 and pd.notna(row['ROAS']) and row['ROAS'] > row['BEP'] * 1.5:
-                rekomendasi.append("🟡 ROAS tinggi tapi jangkauan sempit → Longgarkan target ROAS")
-                masalah.append("Distribusi Sempit")
-                prioritas = min(prioritas, 2)
-            
-            # Performa sehat
-            if row['CTR'] >= ctr_threshold and pd.notna(row['ROAS']) and row['ROAS'] >= row['BEP']:
-                if 'orders' in df_valid.columns and row['orders'] > 0:
-                    rekomendasi.append("✅ Performa sehat → Scale naikkan budget 30%")
-                    if prioritas == 4:
-                        prioritas = 3
-            
-            if not rekomendasi:
-                rekomendasi.append("⚠️ Data tidak cukup")
-                masalah.append("Data Tidak Cukup")
-            
-            return {
-                'rekomendasi': " | ".join(rekomendasi[:2]),
-                'prioritas': prioritas,
-                'masalah': masalah[0] if masalah else "Normal"
-            }
-        
-        hasil = df_valid.apply(analisis, axis=1)
-        df_valid['rekomendasi'] = [x['rekomendasi'] for x in hasil]
-        df_valid['prioritas'] = [x['prioritas'] for x in hasil]
-        df_valid['masalah'] = [x['masalah'] for x in hasil]
-        
-        # ==================== METRIC CARDS ====================
-        st.subheader("📊 Ringkasan Kinerja TikTok Ads")
-        
-        col1, col2, col3, col4, col5 = st.columns(5)
-        
-        with col1:
-            avg_ctr = df_valid['CTR'].mean()
-            st.metric("Rata-rata CTR", f"{avg_ctr:.1f}%")
-        
-        with col2:
-            avg_roas = df_valid['ROAS'].mean()
-            st.metric("Rata-rata ROAS", f"{avg_roas:.1f}x")
-        
-        with col3:
-            total_spend = df_valid['spend'].sum()
-            st.metric("Total Spend", f"Rp{total_spend:,.0f}")
-        
-        with col4:
-            total_sales = df_valid['sales'].sum()
-            st.metric("Total Omset", f"Rp{total_sales:,.0f}")
-        
-        with col5:
-            if 'orders' in df_valid.columns:
-                total_orders = df_valid['orders'].sum()
-                st.metric("Total Order", f"{total_orders:,.0f}")
-            else:
-                st.metric("Total Iklan", f"{len(df_valid)}")
-        
-        st.markdown("---")
-        
-        # ==================== TAB ====================
-        tab1, tab2 = st.tabs(["📋 Tabel Detail", "🎯 Prioritas Aksi"])
-        
-        with tab1:
-            kolom_tampil = []
-            if 'campaign' in df_valid.columns:
-                kolom_tampil.append('campaign')
-            if 'video_title' in df_valid.columns:
-                kolom_tampil.append('video_title')
-            kolom_tampil.extend(['CTR', 'ROAS', 'CPC', 'masalah', 'prioritas', 'rekomendasi'])
-            
-            kolom_tampil = [k for k in kolom_tampil if k in df_valid.columns]
-            st.dataframe(df_valid[kolom_tampil], use_container_width=True, height=400)
-        
-        with tab2:
-            darurat = df_valid[df_valid['prioritas'] == 1]
-            penting = df_valid[df_valid['prioritas'] == 2]
-            
-            if len(darurat) > 0:
-                st.markdown("#### 🔴 PRIORITAS 1 - TINDAKAN SEGERA")
-                for _, row in darurat.iterrows():
-                    nama = row.get('campaign', row.get('video_title', 'Iklan'))
-                    if len(str(nama)) > 50:
-                        nama = str(nama)[:47] + "..."
-                    st.markdown(f"""
-                    <div class="danger-card">
-                        <b>⚠️ {nama}</b><br>
-                        {row['rekomendasi']}<br>
-                        <small>CTR: {row['CTR']}% | ROAS: {row['ROAS']:.1f}x | Spend: Rp{row['spend']:,.0f}</small>
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            if len(penting) > 0:
-                st.markdown("#### 🟠 PRIORITAS 2 - OPTIMASI (1-3 Hari)")
-                for _, row in penting.iterrows():
-                    nama = row.get('campaign', row.get('video_title', 'Iklan'))
-                    if len(str(nama)) > 50:
-                        nama = str(nama)[:47] + "..."
-                    st.markdown(f"""
-                    <div class="warning-card">
-                        <b>📊 {nama}</b><br>
-                        {row['rekomendasi']}
-                    </div>
-                    """, unsafe_allow_html=True)
-        
-        # ==================== DOWNLOAD ====================
-        csv = df_valid.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Download Hasil Analisis (CSV)",
-            data=csv,
-            file_name=f"tiktok_analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
-            mime="text/csv"
-        )
+col1, col2 = st.columns(2)
 
-else:
-    st.info("👈 **Upload file Excel dari TikTok Ads**")
+with col1:
+    st.markdown("### 📊 Data Performa Iklan")
+    impressions = st.number_input("👁️ Pengunjung (Impressions)", min_value=0, value=10000, step=1000)
+    clicks = st.number_input("🖱️ Klik (Clicks)", min_value=0, value=300, step=50)
     
-    with st.expander("📖 Format kolom yang didukung"):
-        st.markdown("""
-        **Kolom yang akan terbaca otomatis:**
-        - `Nama kampanye` → Nama iklan
-        - `Biaya` → Spend iklan
-        - `Pendapatan kotor` → Omset
-        - `Impresi iklan produk` → Tayangan
-        - `Jumlah klik iklan produk` → Klik
-        - `Pesanan SKU` → Jumlah order
-        - `Judul video` → Judul video
-        - `Jenis materi iklan` → Kartu produk / Video
-        
-        **Cara export dari TikTok Ads:**
-        1. Buka TikTok Ads Manager
-        2. Pilih tab **Laporan** → **Laporan Kustom**
-        3. Pilih kolom di atas
-        4. Export sebagai **Excel (.xlsx)**
-        5. Upload ke sini
+    st.markdown("### 💰 Data Anggaran")
+    budget_set = st.number_input("💰 Anggaran yang disetting (Budget per hari)", min_value=0, value=100000, step=10000)
+    budget_spent = st.number_input("💸 Anggaran yang terserap hari ini", min_value=0, value=90000, step=5000)
+
+with col2:
+    st.markdown("### 🎯 Target ROAS")
+    target_roas = st.number_input("🎯 ROAS / ROI yang disetting", min_value=0.0, value=6.0, step=0.5,
+                                   help="Target ROAS yang Anda pasang di iklan")
+    
+    st.markdown("### 📈 Data Penjualan")
+    sales = st.number_input("🛒 Omset (Pendapatan kotor)", min_value=0, value=600000, step=50000)
+    orders = st.number_input("📦 Jumlah Order (Pesanan)", min_value=0, value=6, step=1)
+
+# ==================== HITUNG METRIK ====================
+if clicks > 0 and impressions > 0:
+    ctr = (clicks / impressions * 100)
+    cpc = budget_spent / clicks if clicks > 0 else 0
+    roas_aktual = sales / budget_spent if budget_spent > 0 else 0
+    cpa = budget_spent / orders if orders > 0 else 0
+    budget_terserap_persen = (budget_spent / budget_set * 100) if budget_set > 0 else 0
+else:
+    ctr = 0
+    cpc = 0
+    roas_aktual = 0
+    cpa = 0
+    budget_terserap_persen = 0
+
+# ==================== METRIC CARDS ====================
+st.markdown("---")
+st.subheader("📊 Ringkasan Metrik")
+
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    st.markdown(f"""
+    <div class="metric-box">
+        <h4>CTR</h4>
+        <h2>{ctr:.2f}%</h2>
+        <small>{'✅ Bagus' if ctr >= 2 else '⚠️ Rendah'}</small>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown(f"""
+    <div class="metric-box">
+        <h4>ROAS Aktual</h4>
+        <h2>{roas_aktual:.2f}x</h2>
+        <small>Target: {target_roas}x | BEP: {bep_roas}x</small>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown(f"""
+    <div class="metric-box">
+        <h4>CPC</h4>
+        <h2>Rp{cpc:,.0f}</h2>
+        <small>{'✅ Normal' if cpc <= 3000 else '⚠️ Mahal'}</small>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col4:
+    st.markdown(f"""
+    <div class="metric-box">
+        <h4>CPA</h4>
+        <h2>Rp{cpa:,.0f}</h2>
+        <small>Biaya per order</small>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col5:
+    st.markdown(f"""
+    <div class="metric-box">
+        <h4>Anggaran Terserap</h4>
+        <h2>{budget_terserap_persen:.0f}%</h2>
+        <small>Dari Rp{budget_set:,.0f}</small>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ==================== DIAGNOSIS & REKOMENDASI ====================
+st.markdown("---")
+st.subheader("🩺 Diagnosis & Rekomendasi")
+
+masalah = []
+solusi = []
+prioritas = []
+
+# ========== DIAGNOSIS 1: MASALAH CTR ==========
+if ctr < 2:
+    masalah.append("🔴 **CTR Rendah** (kurang dari 2%)")
+    solusi.append("""
+    **Solusi:** Ganti visual iklan (foto utama / video hook dalam 3-5 detik pertama)
+    - Buat 3 variasi kreatif baru dengan angle berbeda (diskon, masalah, bukti sosial)
+    - Pastikan produk terlihat jelas dan menarik
+    - Tambahkan teks promo yang menggugah (contoh: "Diskon 50%", "Stok Terbatas")
+    """)
+    prioritas.append("URGENT - Lakukan dalam 24 jam")
+elif ctr < 3:
+    masalah.append("🟡 **CTR Cukup** (2-3%)")
+    solusi.append("""
+    **Solusi:** CTR masih wajar, tapi bisa ditingkatkan
+    - Test A/B dengan 1-2 kreatif baru
+    - Optimasi hook video di 3 detik pertama
+    """)
+    prioritas.append("Optimasi - Lakukan dalam 3 hari")
+else:
+    masalah.append("✅ **CTR Bagus** (diatas 3%)")
+    solusi.append("**Solusi:** Visual sudah menarik, fokus ke aspek lain")
+    prioritas.append("Pertahankan")
+
+# ========== DIAGNOSIS 2: MASALAH ANGGARAN TERSERAP ==========
+if budget_terserap_persen < 50:
+    masalah.append("🔴 **Anggaran Tidak Terserap** (kurang dari 50%)")
+    solusi.append("""
+    **Solusi:** Target ROAS terlalu ketat, sistem tidak bisa membelanjakan budget
+    - **Turunkan target ROAS 0.5 - 1 poin**
+    - Contoh: dari ROAS 6 → turunkan ke 5 atau 5.5
+    - Setelah turun, tunggu 3 hari jangan diubah-ubah
+    """)
+    prioritas.append("URGENT - Lakukan sekarang")
+elif budget_terserap_persen < 80:
+    masalah.append("🟡 **Anggaran Kurang Optimal** (50-80%)")
+    solusi.append("""
+    **Solusi:** Anggaran belum habis, coba longgarkan target ROAS sedikit
+    - **Turunkan target ROAS 0.5 poin**
+    - Atau naikkan budget 20-30% jika ROAS masih sehat
+    """)
+    prioritas.append("Optimasi - Lakukan dalam 1-2 hari")
+
+# ========== DIAGNOSIS 3: MASALAH ROAS ==========
+if roas_aktual < bep_roas and roas_aktual > 0:
+    rugi = (bep_roas - roas_aktual) * budget_spent
+    masalah.append(f"🔴 **ROAS {roas_aktual:.1f}x di bawah BEP {bep_roas}x** (Rugi Rp{rugi:,.0f})")
+    solusi.append(f"""
+    **Solusi:** Iklan sedang rugi, harus segera ditangani
+    - **Opsi 1:** Naikkan target ROAS menjadi {bep_roas + 0.5:.1f} - {bep_roas + 1:.1f}
+    - **Opsi 2:** Stop iklan sementara, perbaiki produk dulu
+    - **Opsi 3:** Turunkan budget 50% untuk mengurangi kerugian
+    
+    **Prioritas utama:** Perbaiki konversi di landing page (review, harga, deskripsi)
+    """)
+    prioritas.append("URGENT - Evaluasi hari ini")
+elif roas_aktual < target_roas and roas_aktual >= bep_roas:
+    masalah.append(f"🟡 **ROAS {roas_aktual:.1f}x di bawah target {target_roas}x**")
+    solusi.append(f"""
+    **Solusi:** ROAS masih aman (di atas BEP), tapi belum mencapai target
+    - **Turunkan target ROAS ke {roas_aktual + 0.5:.1f}** agar iklan lebih longgar
+    - Atau biarkan 3-5 hari, sistem bisa stabil sendiri
+    - Jangan naikkan budget dulu sampai ROAS stabil
+    """)
+    prioritas.append("Pantau - Evaluasi 3 hari lagi")
+elif roas_aktual > target_roas * 1.5:
+    masalah.append(f"🏆 **ROAS {roas_aktual:.1f}x sangat tinggi!** (>{target_roas * 1.5:.0f}x)")
+    solusi.append(f"""
+    **Solusi:** Performa sangat bagus, waktunya SCALE
+    - **Naikkan budget 30-50%** (misal dari Rp{budget_set:,.0f} ke Rp{budget_set * 1.3:,.0f})
+    - Target ROAS bisa dipertahankan atau naikkan sedikit
+    - Pastikan stok produk aman sebelum scale
+    """)
+    prioritas.append("Scale - Lakukan segera")
+
+# ========== DIAGNOSIS 4: MASALAH KONVERSI (Klik ada, order sedikit) ==========
+if clicks > 50 and orders == 0:
+    masalah.append("🔴 **Klik banyak ({clicks}) tapi 0 order**")
+    solusi.append("""
+    **Solusi:** Produk tidak meyakinkan pembeli, fokus perbaiki:
+    1. **Cek harga kompetitor** - apakah terlalu mahal?
+    2. **Tambah review & rating** - minimal 10-20 review positif
+    3. **Perbaiki deskripsi** - fokus ke manfaat, bukan spesifikasi
+    4. **Tambahkan video produk** - tunjukkan produk asli
+    
+    **Jangan ubah setting ROAS dulu**, karena masalahnya di produk, bukan iklan
+    """)
+    prioritas.append("URGENT - Perbaiki produk dulu")
+elif clicks > 50 and orders > 0:
+    cvr = orders / clicks * 100
+    if cvr < 2:
+        masalah.append(f"🟡 **CVR {cvr:.1f}% rendah** (kurang dari 2%)")
+        solusi.append("""
+        **Solusi:** Konversi rendah, optimasi landing page:
+        - Perbaiki foto produk (tampilkan dari berbagai sudut)
+        - Tambahkan promo/bundling (beli 2 gratis ongkir)
+        - Pasang testimoni pembeli di deskripsi
+        - Pastikan harga kompetitif dengan kompetitor
         """)
+        prioritas.append("Optimasi - Lakukan dalam 3 hari")
+
+# ========== DIAGNOSIS 5: MASALAH CPC ==========
+if cpc > 3000 and clicks > 0:
+    masalah.append(f"💰 **CPC Rp{cpc:,.0f} terlalu mahal** (>Rp3.000)")
+    solusi.append("""
+    **Solusi:** Biaya per klik mahal, perbaiki relevansi:
+    - Perluas target audiens (jangan terlalu sempit)
+    - Ganti kreatif iklan agar lebih relevan
+    - Turunkan target ROAS 0.5-1 poin
+    """)
+    prioritas.append("Optimasi - Lakukan dalam 1-2 hari")
+
+# ========== DIAGNOSIS 6: JANGKAUAN SEMPIT ==========
+if impressions < 5000 and roas_aktual > bep_roas * 1.5 and roas_aktual > 0:
+    masalah.append("🟡 **ROAS tinggi tapi jangkauan sempit** (<5000 tayangan)")
+    solusi.append("""
+    **Solusi:** Iklan terlalu selektif, perlu ekspansi:
+    - **Longgarkan target ROAS** turunkan 0.5-1 poin
+    - **Naikkan budget 20-30%**
+    - Biarkan 3-5 hari, pantau apakah jangkauan membesar
+    """)
+    prioritas.append("Optimasi - Lakukan dalam 1-2 hari")
+
+# ========== TAMPILKAN HASIL ==========
+if len(masalah) > 0:
+    for i in range(len(masalah)):
+        if "🔴" in masalah[i]:
+            st.markdown(f"""
+            <div class="danger">
+                <h4>{masalah[i]}</h4>
+                {solusi[i]}
+                <hr>
+                <b>🎯 Prioritas:</b> {prioritas[i] if i < len(prioritas) else 'Segera'}
+            </div>
+            """, unsafe_allow_html=True)
+        elif "🟡" in masalah[i]:
+            st.markdown(f"""
+            <div class="warning">
+                <h4>{masalah[i]}</h4>
+                {solusi[i]}
+                <hr>
+                <b>🎯 Prioritas:</b> {prioritas[i] if i < len(prioritas) else 'Normal'}
+            </div>
+            """, unsafe_allow_html=True)
+        elif "🏆" in masalah[i]:
+            st.markdown(f"""
+            <div class="success">
+                <h4>{masalah[i]}</h4>
+                {solusi[i]}
+                <hr>
+                <b>🎯 Prioritas:</b> Scale!
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="info">
+                <h4>{masalah[i]}</h4>
+                {solusi[i]}
+            </div>
+            """, unsafe_allow_html=True)
+
+# ========== RINGKASAN ACTION PLAN ==========
+st.markdown("---")
+st.subheader("📋 Ringkasan Action Plan")
+
+st.markdown("""
+| Prioritas | Tindakan | Deadline |
+|-----------|----------|----------|
+| 🔴 URGENT | Ganti visual / turunkan ROAS / stop iklan | Hari ini |
+| 🟡 OPTIMASI | Perbaiki produk / landing page | 1-3 hari |
+| 🟢 PANTAU | Scale bertahap / pantau stabilitas | 3-7 hari |
+""")
+
+# ========== REKOMENDASI ANGKA ==========
+st.markdown("---")
+st.subheader("🎯 Rekomendasi Setting Ulang")
+
+col_rek1, col_rek2 = st.columns(2)
+
+with col_rek1:
+    st.markdown("### 🎯 Target ROAS")
+    if budget_terserap_persen < 50:
+        st.success(f"**Turunkan target ROAS menjadi:** {target_roas - 1:.1f} - {target_roas - 0.5:.1f}")
+    elif roas_aktual < bep_roas:
+        st.success(f"**Naikkan target ROAS menjadi:** {bep_roas + 0.5:.1f} - {bep_roas + 1:.1f}")
+    elif roas_aktual > target_roas * 1.5:
+        st.success(f"**Pertahankan target ROAS di:** {target_roas:.1f} (bisa naikkan sedikit)")
+    else:
+        st.info(f"**Pertahankan target ROAS di:** {target_roas:.1f}")
+
+with col_rek2:
+    st.markdown("### 💰 Budget Harian")
+    if roas_aktual > target_roas * 1.5:
+        st.success(f"**Naikkan budget menjadi:** Rp{budget_set * 1.3:,.0f} - Rp{budget_set * 1.5:,.0f}")
+    elif budget_terserap_persen < 50:
+        st.warning(f"**Turunkan budget sementara** atau longgarkan ROAS dulu")
+    elif roas_aktual < bep_roas:
+        st.warning(f"**Turunkan budget 50%** (Rp{budget_set * 0.5:,.0f}) sampai ROAS membaik")
+    else:
+        st.info(f"**Pertahankan budget di:** Rp{budget_set:,.0f}")
+
+# ==================== PANDUAN LENGKAP ====================
+with st.expander("📖 Panduan Lengkap Interpretasi Data"):
+    st.markdown("""
+    ### 🎯 Cara Membaca Data Iklan
+    
+    | Masalah | Ciri-ciri | Solusi |
+    |---------|-----------|--------|
+    | **CTR Rendah** | CTR < 2% | Ganti visual (foto/video hook) |
+    | **Anggaran Tidak Habis** | Terserap <50% | Turunkan target ROAS 0.5-1 poin |
+    | **ROAS di Bawah BEP** | ROAS < BEP | Naikkan target ROAS atau stop |
+    | **Klik banyak, order 0** | Clicks >50, orders=0 | Perbaiki produk (harga/review) |
+    | **ROAS tinggi, jangkauan kecil** | ROAS > BEP×1.5, impressions<5000 | Longgarkan ROAS, naikkan budget |
+    | **Performa sehat** | CTR>2%, ROAS>BEP | Scale naikkan budget 30% |
+    
+    ### 🔥 Rumus Cepat yang Wajib Diingat
+    
+    - **CTR < 2%** → Masalah visual (ganti kreatif)
+    - **Klik ada, order 0** → Masalah produk (harga/review/deskripsi)
+    - **ROAS < BEP** → Rugi (naikkan target ROAS atau stop)
+    - **Budget gak habis** → ROAS terlalu ketat (turunkan)
+    """)
 
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: gray;'>🩺 Ads Doctor | Khusus TikTok Ads | Framework GMV Max</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>🩺 Ads Doctor | Framework GMV Max Shopee & TikTok</p>", unsafe_allow_html=True)
