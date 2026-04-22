@@ -10,6 +10,10 @@ st.set_page_config(page_title="Ads Doctor Premium - TikTok & Shopee", page_icon=
 ADMIN_USERNAME = "arkidigital"
 ADMIN_PASSWORD = "Arkidigital2024"
 
+# Nomor WhatsApp Mas
+WA_NUMBER = "6288228878258"
+WA_LINK = f"https://wa.me/{WA_NUMBER}?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
+
 # Konfigurasi Demo
 DEMO_DURATION_MINUTES = 10  # 10 menit demo
 MAX_DEMO_ANALYSIS = 3  # Maks 3 kali analisis di mode demo
@@ -131,7 +135,7 @@ def show_demo_timer():
             <div style="background: #fee2e2; padding: 0.5rem; border-radius: 0.5rem; text-align: center; margin-bottom: 1rem;">
                 <small>⏰ <strong>Demo akan berakhir!</strong><br>
                 Sisa: {minutes:02d}:{seconds:02d}<br>
-                <a href="#" style="color: #dc2626;">Beli sekarang →</a></small>
+                <a href="{WA_LINK}" target="_blank" style="color: #dc2626;">Beli sekarang →</a></small>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -145,9 +149,7 @@ def show_demo_timer():
         
         # Tombol beli di sidebar demo
         if st.sidebar.button("💎 Beli Premium Rp147rb", use_container_width=True):
-            # Redirect ke WhatsApp
-            wa_link = "https://wa.me/6288228878258?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
-            st.markdown(f'<meta http-equiv="refresh" content="0; url={wa_link}">', unsafe_allow_html=True)
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={WA_LINK}">', unsafe_allow_html=True)
 
 # ==================== CUSTOM CSS ====================
 st.markdown("""
@@ -193,16 +195,14 @@ if not is_premium_user() and not st.session_state.get("demo_mode", False):
 if is_demo_expired():
     st.warning("⏰ **Demo Anda telah berakhir!** Beli premium untuk akses penuh.")
     if st.button("💎 Beli Premium Rp147rb", use_container_width=True):
-        wa_link = "https://wa.me/6288228878258?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
-        st.markdown(f'<meta http-equiv="refresh" content="0; url={wa_link}">', unsafe_allow_html=True)
+        st.markdown(f'<meta http-equiv="refresh" content="0; url={WA_LINK}">', unsafe_allow_html=True)
     st.stop()
 
 # Jika demo sudah mencapai batas analisis
 if st.session_state.get("demo_mode", False) and not can_do_demo_analysis():
     st.warning(f"⚠️ **Demo terbatas maksimal {MAX_DEMO_ANALYSIS} kali analisis.** Beli premium untuk akses unlimited!")
     if st.button("💎 Beli Premium Rp147rb", use_container_width=True):
-        wa_link = "https://wa.me/6288228878258?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
-        st.markdown(f'<meta http-equiv="refresh" content="0; url={wa_link}">', unsafe_allow_html=True)
+        st.markdown(f'<meta http-equiv="refresh" content="0; url={WA_LINK}">', unsafe_allow_html=True)
     st.stop()
 
 # Tampilkan timer demo di sidebar
@@ -492,12 +492,12 @@ if analyze_clicked:
     # Jika demo, tampilkan pesan beli
     if st.session_state.get("demo_mode", False):
         st.markdown("---")
-        st.markdown("""
+        st.markdown(f"""
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 0.8rem; text-align: center; color: white;">
             <h4 style="margin: 0;">💎 Suka dengan tools ini?</h4>
             <p style="margin: 0.5rem 0;">Dapatkan akses penuh + konsultasi GRATIS!</p>
             <p style="font-size: 1.5rem; font-weight: bold; margin: 0.5rem 0;">Rp147rb (sekali bayar)</p>
-            <a href="https://wa.me/6281234567890?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb" target="_blank">
+            <a href="{WA_LINK}" target="_blank">
                 <button style="background: white; color: #667eea; border: none; padding: 0.5rem 1.5rem; border-radius: 2rem; font-weight: bold; cursor: pointer;">🔥 Beli Sekarang</button>
             </a>
         </div>
