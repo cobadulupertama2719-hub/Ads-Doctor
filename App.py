@@ -502,7 +502,191 @@ if analyze_clicked:
             </a>
         </div>
         """, unsafe_allow_html=True)
+# ==================== TAB GENERATOR SEO & DESKRIPSI ====================
+st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+st.subheader("✨ **Generator SEO & Deskripsi Produk**")
+st.markdown("Bikin judul dan deskripsi produk yang menarik biar CTR naik!")
 
+tab_gen1, tab_gen2, tab_gen3 = st.tabs(["📝 SEO Title Generator", "📄 Deskripsi Produk", "🎬 Hook Video TikTok"])
+
+# ==================== TAB 1: SEO TITLE GENERATOR ====================
+with tab_gen1:
+    st.markdown("### 🎯 **Buat Judul Produk yang Bikin Klik**")
+    st.markdown("Masukkan nama produk dan kata kunci, saya akan generate 10 judul siap pakai!")
+    
+    col_title1, col_title2 = st.columns(2)
+    with col_title1:
+        produk_name = st.text_input("Nama Produk", placeholder="Contoh: Kaos Oversize Pria", key="seo_produk")
+    with col_title2:
+        keyword = st.text_input("Kata Kunci Utama (opsional)", placeholder="Contoh: nyaman, adem, premium", key="seo_keyword")
+    
+    if st.button("✨ Generate Judul SEO", key="btn_seo"):
+        if produk_name:
+            # List judul siap pakai
+            judul_list = [
+                f"🔥 {produk_name} - Kualitas Premium Harga Terjangkau!",
+                f"💯 {produk_name} BEST SELLER - Udah Terjual 1000+",
+                f"✨ WAJIB PUNYA! {produk_name} Bikin Penampilan Makin Kece",
+                f"🎯 {produk_name} - Dijamin Nyaman Dipakai Seharian",
+                f"💎 {produk_name} PREMIUM QUALITY - Limited Stock!",
+                f"🛒 {produk_name} - 50% OFF Hari Ini! Buruan",
+                f"⭐ {produk_name} - Review 4.9/5, Cobain Sendiri!",
+                f"📦 {produk_name} - FREE ONGKIR Se-Indonesia!",
+                f"🏆 {produk_name} - Rekomendasi #1 di TikTok",
+                f"💝 {produk_name} - Kado Terbaik untuk Orang Tersayang"
+            ]
+            
+            # Tambahin keyword kalau ada
+            if keyword:
+                judul_list = [f"{j} | {keyword}" for j in judul_list]
+            
+            st.markdown("### 📋 **Judul Siap Pakai (Copy-Paste):**")
+            for i, judul in enumerate(judul_list, 1):
+                st.markdown(f"""
+                <div style="background: #f8f9ff; padding: 0.5rem 1rem; border-radius: 0.5rem; margin: 0.3rem 0; border-left: 3px solid #667eea;">
+                    <code>{i}. {judul}</code>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.info("💡 **Tips:** Pilih judul yang paling sesuai dengan target pasar Anda!")
+        else:
+            st.warning("⚠️ Masukkan nama produk terlebih dahulu!")
+
+# ==================== TAB 2: DESKRIPSI PRODUK ====================
+with tab_gen2:
+    st.markdown("### 📄 **Buat Deskripsi Produk yang Meyakinkan**")
+    st.markdown("Deskripsi yang bagus bisa naikin konversi hingga 2x lipat!")
+    
+    col_desc1, col_desc2 = st.columns(2)
+    with col_desc1:
+        produk_desc = st.text_input("Nama Produk", placeholder="Contoh: Kaos Oversize Pria", key="desc_produk")
+        manfaat = st.text_area("Manfaat Produk (pisahkan dengan koma)", placeholder="Contoh: adem, nyaman, tidak panas, bahan tebal", key="manfaat")
+    with col_desc2:
+        spesifikasi = st.text_area("Spesifikasi (opsional)", placeholder="Contoh: Bahan Cotton Combed 30s, Size S-XXL, Tersedia 5 warna", key="spesifikasi")
+        target_pasar = st.selectbox("Target Pasar", ["Pria", "Wanita", "Unisex", "Remaja", "Dewasa"], key="target")
+    
+    if st.button("✨ Generate Deskripsi", key="btn_desc"):
+        if produk_desc:
+            # Parse manfaat
+            manfaat_list = [m.strip() for m in manfaat.split(",")] if manfaat else ["premium", "nyaman"]
+            
+            # Generate deskripsi
+            deskripsi = f"""
+**✨ {produk_desc} - Kualitas Premium Harga Terjangkau!**
+
+🔥 **Kenapa Harus Pilih {produk_desc}?**
+
+✅ **Bahan Berkualitas** - Menggunakan material terbaik yang {' & '.join(manfaat_list[:3])}
+✅ **Desain Modern** - Cocok untuk berbagai acara, dari santai sampai formal
+✅ **Size Lengkap** - Tersedia dari S sampai XXL, cocok untuk semua postur tubuh
+✅ **Garansi 100%** - Jika tidak sesuai, uang kembali!
+
+📏 **Detail Produk:**
+{spesifikasi if spesifikasi else '- Bahan: Premium Quality\n- Size: S, M, L, XL, XXL\n- Warna: Hitam, Putih, Navy, Abu, Coklat'}
+
+🎯 **Cocok Untuk:**
+- Daily casual
+- Hangout sama teman
+- OOTD keren
+- {target_pasar} modern
+
+💬 **Testimoni Pembeli:**
+⭐ "Bahannya enak banget, gak panas! Recomended!" - Andi
+⭐ "Pengiriman cepat, kualitas oke. Bakal repeat order!" - Budi
+⭐ "Sesuai ekspektasi, bakal beli lagi buat kado." - Citra
+
+🛒 **ORDER SEKARANG JUGA!**
+Klik tombol "Beli" atau chat admin untuk konsultasi size.
+
+🔥 **Promo Terbatas!** Free ongkir + Diskon 10% untuk 50 pembeli pertama!
+
+*Stok terbatas, jangan sampai kehabisan!*
+"""
+            
+            st.markdown("### 📋 **Deskripsi Siap Pakai (Copy-Paste):**")
+            st.markdown(f"""
+            <div style="background: #f8f9ff; padding: 1rem; border-radius: 0.8rem; border: 1px solid #e5e7eb; white-space: pre-wrap; font-family: monospace; font-size: 0.8rem;">
+{deskripsi}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Tombol copy
+            st.code(deskripsi, language="markdown")
+            
+            st.info("💡 **Tips:** Sesuaikan dengan brand voice Anda! Jangan lupa tambahkan emoji yang relevan.")
+        else:
+            st.warning("⚠️ Masukkan nama produk terlebih dahulu!")
+
+# ==================== TAB 3: HOOK VIDEO TIKTOK ====================
+with tab_gen3:
+    st.markdown("### 🎬 **Buat Hook Video TikTok (3 Detik Pertama)**")
+    st.markdown("Hook yang menarik = CTR tinggi! Ini kunci sukses iklan TikTok.")
+    
+    produk_hook = st.text_input("Nama Produk", placeholder="Contoh: Kaos Oversize", key="hook_produk")
+    hook_style = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon/Promo", "Bukti Sosial", "Curiosity", "Emosional"], key="hook_style")
+    
+    if st.button("✨ Generate Hook Video", key="btn_hook"):
+        if produk_hook:
+            hook_list = []
+            
+            if hook_style == "Problem Solver":
+                hook_list = [
+                    f"😫 Capek cari {produk_hook} yang nyaman? STOP!",
+                    f"❌ Jangan beli {produk_hook} sebelum lihat video ini!",
+                    f"🤯 Rahasia {produk_hook} yang gak pernah kamu tahu!",
+                    f"⚠️ 5 kesalahan fatal pas beli {produk_hook}!",
+                    f"💡 Cara pilih {produk_hook} yang bikin kamu auto percaya diri!"
+                ]
+            elif hook_style == "Diskon/Promo":
+                hook_list = [
+                    f"🔥 DISKON 50% {produk_hook} cuma hari ini!",
+                    f"🎉 FREE ONGKIR {produk_hook} se-Indonesia!",
+                    f"💰 Harga {produk_hook} turun drastis! Buruan!",
+                    f"🎁 Beli 1 gratis 1 untuk {produk_hook} terbatas!",
+                    f"⚡ Stok {produk_hook} tinggal 10! Cepat checkout!"
+                ]
+            elif hook_style == "Bukti Sosial":
+                hook_list = [
+                    f"🏆 {produk_hook} best seller dengan 5000+ review!",
+                    f"⭐ 4.9/5 rating untuk {produk_hook}! Cobain sendiri!",
+                    f"📦 1000+ orang udah beli {produk_hook} minggu ini!",
+                    f"💬 Viral! {produk_hook} lagi di mana-mana!",
+                    f"👑 Rekomendasi #1 untuk {produk_hook} versi seleb TikTok!"
+                ]
+            elif hook_style == "Curiosity":
+                hook_list = [
+                    f"🤔 Kenapa semua orang pake {produk_hook}?",
+                    f"😱 Gak nyangka {produk_hook} sekeren ini!",
+                    f"🫣 Psst... rahasia {produk_hook} akhirnya kebongkar!",
+                    f"❓ Apa yang terjadi kalau kamu pake {produk_hook}?",
+                    f"👀 Wajib lihat! {produk_hook} versi terbaru!"
+                ]
+            else:  # Emosional
+                hook_list = [
+                    f"🥺 Aku menangis lihat {produk_hook} ini!",
+                    f"😍 Cinta pertama sama {produk_hook}!",
+                    f"💗 {produk_hook} yang bikin aku percaya diri!",
+                    f"🤗 Pelukan terbaik dari {produk_hook}!",
+                    f"✨ Hidup berubah setelah pake {produk_hook}!"
+                ]
+            
+            st.markdown("### 🎥 **Hook Video Siap Pakai (3 Detik Pertama):**")
+            for i, hook in enumerate(hook_list, 1):
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 0.6rem 1rem; border-radius: 0.5rem; margin: 0.4rem 0;">
+                    <code style="font-size: 1rem;">🎬 {i}. {hook}</code>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.info("""
+            💡 **Tips Hook Video TikTok:**
+            - Gunakan teks besar & warna mencolok di 3 detik pertama
+            - Ekspresi wajah yang overacting membantu!
+            - Tambahkan suara/viral sound yang lagi trend
+            - Jangan lupa ajakan untuk "Scroll STOP" atau "Langsung checkout"
+            """)
+        else:
+            st.warning("⚠️ Masukkan nama produk terlebih dahulu!")
 # ==================== FOOTER ====================
 st.markdown("---")
 st.markdown(f"""
