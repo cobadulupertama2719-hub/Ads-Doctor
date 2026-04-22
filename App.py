@@ -1,8 +1,47 @@
 import streamlit as st
-import numpy as np
+import hashlib
+import hmac
 from datetime import datetime
 
-st.set_page_config(page_title="Ads Doctor Premium - TikTok & Shopee", page_icon="🩺", layout="wide")
+# ==================== KONFIGURASI AKSES ====================
+# Ganti password ini dengan yang Mas mau!
+ADMIN_USERNAME = "arkidigital"
+ADMIN_PASSWORD = "GMVMAX"  # Ganti dengan password Mas sendiri
+
+# Fungsi verifikasi password
+def check_password():
+    """Mengembalikan True jika user sudah login"""
+    
+    def login_form():
+        with st.form("Login"):
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem;">
+                <h1>🩺 Ads Doctor Premium</h1>
+                <p>Silakan login untuk mengakses aplikasi</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            username = st.text_input("📧 Username", placeholder="Masukkan username")
+            password = st.text_input("🔒 Password", type="password", placeholder="Masukkan password")
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                submitted = st.form_submit_button("🔓 Login", use_container_width=True)
+            
+            if submitted:
+                if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+                    st.session_state["authenticated"] = True
+                    st.rerun()
+                else:
+                    st.error("❌ Username atau password salah!")
+    
+    # Cek session state
+    if st.session_state.get("authenticated", False):
+        return True
+    
+    # Tampilkan form login
+    login_form()
+    return False
 
 # ==================== CUSTOM CSS PREMIUM ====================
 st.markdown("""
@@ -66,76 +105,11 @@ st.markdown("""
         opacity: 0.8;
     }
     
-    .diagnosis-table {
-        background: white;
-        border-radius: 1rem;
-        overflow: hidden;
-        margin: 1rem 0;
-    }
-    
-    .diagnosis-row {
-        display: flex;
-        border-bottom: 1px solid #eee;
-        padding: 0.75rem 1rem;
-    }
-    
-    .diagnosis-label {
-        width: 35%;
-        font-weight: 600;
-        color: #333;
-    }
-    
-    .diagnosis-value {
-        width: 65%;
-        color: #555;
-    }
-    
-    .badge-danger {
-        background: #fee2e2;
-        color: #dc2626;
-        padding: 0.2rem 0.6rem;
-        border-radius: 2rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-    
-    .badge-warning {
-        background: #fef3c7;
-        color: #d97706;
-        padding: 0.2rem 0.6rem;
-        border-radius: 2rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-    
-    .badge-success {
-        background: #d1fae5;
-        color: #059669;
-        padding: 0.2rem 0.6rem;
-        border-radius: 2rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-    
-    .badge-info {
-        background: #dbeafe;
-        color: #2563eb;
-        padding: 0.2rem 0.6rem;
-        border-radius: 2rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-    
-    .action-card {
-        background: #f8f9ff;
-        border-radius: 1rem;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-left: 4px solid #667eea;
+    .logout-btn {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 999;
     }
     
     .divider {
@@ -163,10 +137,64 @@ st.markdown("""
         font-weight: 600;
         width: 100%;
     }
+    
+    .badge-success {
+        background: #d1fae5;
+        color: #059669;
+        padding: 0.2rem 0.6rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-danger {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 0.2rem 0.6rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-warning {
+        background: #fef3c7;
+        color: #d97706;
+        padding: 0.2rem 0.6rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-info {
+        background: #dbeafe;
+        color: #2563eb;
+        padding: 0.2rem 0.6rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# ==================== HEADER ====================
+# ==================== CEK AUTHENTIKASI ====================
+if not check_password():
+    st.stop()
+
+# ==================== TAMPILAN UTAMA (SETELAH LOGIN) ====================
+
+# Tombol Logout di pojok kanan
+with st.container():
+    col_logout1, col_logout2, col_logout3 = st.columns([6, 1, 1])
+    with col_logout3:
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state["authenticated"] = False
+            st.rerun()
+
+# Header
 st.markdown("""
 <div class="main-header">
     <div class="logo-container">
@@ -207,6 +235,9 @@ with st.sidebar:
         <small>📱 <strong>TikTok:</strong> Target awal = BEP + 2 poin</small>
     </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.caption(f"👤 Login sebagai: **{ADMIN_USERNAME}**")
 
 # ==================== INPUT DATA ====================
 st.subheader("📝 **Input Data Iklan**")
@@ -298,7 +329,7 @@ with col4:
 
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
-# ==================== DIAGNOSIS & KESIMPULAN (TABEL SEDERHANA) ====================
+# ==================== DIAGNOSIS (TABEL SEDERHANA) ====================
 st.subheader("🩺 **Diagnosis & Kesimpulan**")
 
 # Tabel Diagnosis
@@ -389,7 +420,7 @@ else:
     cpc_ket = f"CPC {format_rp(cpc)} > Rp3RB, perlu perbaiki relevansi"
 
 st.markdown(f"""
-<div style="display: flex; padding: 0.6rem 1rem; border-bottom: 1px solid #f0f0f0;">
+<div style="display: flex; padding: 0.6rem 1rem;">
     <div style="width: 35%; font-weight: 500;">🖱️ CPC</div>
     <div style="width: 65%;">{format_rp(cpc)} {cpc_status}<br><small style="color: #666;">{cpc_ket}</small></div>
 </div>
@@ -402,105 +433,73 @@ st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 st.subheader("🎯 **Kesimpulan & Rekomendasi**")
 
 # LOGIKA REKOMENDASI
-rekomendasi_roas = target_roas
 rekomendasi_budget = budget_set
 tindakan = ""
 prioritas = ""
 
-# Kasus 1: ROAS RUGI
 if roas_aktual < roas_bep and roas_aktual > 0:
     tindakan = f"🔺 Naikkan target ROAS menjadi {roas_bep + 0.5:.1f} - {roas_bep + 1:.1f}"
     rekomendasi_budget = budget_set * 0.5
     prioritas = "🔴 PRIORITAS 1 - URGENT"
     warna = "danger"
-
-# Kasus 2: Budget tidak habis (ROAS terlalu ketat)
 elif budget_terserap_persen < 70 and roas_aktual >= roas_bep:
     tindakan = f"🔻 Turunkan target ROAS 0.5 poin menjadi {target_roas - 0.5:.1f}"
     rekomendasi_budget = budget_set
     prioritas = "🟡 PRIORITAS 2 - OPTIMASI"
     warna = "warning"
-
-# Kasus 3: Budget habis & ROAS profit → SCALE 30%
 elif budget_terserap_persen >= 85 and roas_aktual >= roas_bep:
     tindakan = f"🚀 Naikkan budget 30% menjadi {format_rp(budget_set * 1.3)}"
     rekomendasi_budget = budget_set * 1.3
     prioritas = "🟢 PRIORITAS 3 - SCALE"
     warna = "success"
-
-# Kasus 4: Klik banyak tapi order 0
 elif clicks > 50 and orders == 0:
     tindakan = "🛠️ Perbaiki produk (harga, review, deskripsi) - JANGAN ubah setting iklan"
     rekomendasi_budget = budget_set
     prioritas = "🔴 PRIORITAS 1 - URGENT"
     warna = "danger"
-
-# Kasus 5: CTR rendah
 elif ctr < 2 and clicks > 0:
     tindakan = "🎨 Ganti visual iklan (foto utama / video hook 3 detik pertama)"
     rekomendasi_budget = budget_set
     prioritas = "🟡 PRIORITAS 2 - OPTIMASI"
     warna = "warning"
-
-# Kasus 6: Performa sehat
 else:
     tindakan = "✅ Pertahankan setting saat ini, pantau 3-5 hari"
     rekomendasi_budget = budget_set
     prioritas = "🟢 PRIORITAS 3 - PANTAU"
     warna = "info"
 
-# Tampilkan rekomendasi
 if warna == "danger":
     st.markdown(f"""
-    <div style="background: #fee2e2; border-radius: 1rem; padding: 1.2rem; border-left: 4px solid #dc2626;">
+    <div style="background: #fee2e2; border-radius: 1rem; padding: 1rem; border-left: 4px solid #dc2626;">
         <h4 style="margin: 0 0 0.5rem 0;">{prioritas}</h4>
-        <p style="margin: 0; font-size: 1rem;"><strong>📌 Tindakan:</strong> {tindakan}</p>
+        <p style="margin: 0;"><strong>📌 Tindakan:</strong> {tindakan}</p>
         <p style="margin: 0.5rem 0 0 0;"><strong>💰 Rekomendasi Budget:</strong> {format_rp(rekomendasi_budget)}</p>
     </div>
     """, unsafe_allow_html=True)
 elif warna == "warning":
     st.markdown(f"""
-    <div style="background: #fef3c7; border-radius: 1rem; padding: 1.2rem; border-left: 4px solid #f59e0b;">
+    <div style="background: #fef3c7; border-radius: 1rem; padding: 1rem; border-left: 4px solid #f59e0b;">
         <h4 style="margin: 0 0 0.5rem 0;">{prioritas}</h4>
-        <p style="margin: 0; font-size: 1rem;"><strong>📌 Tindakan:</strong> {tindakan}</p>
+        <p style="margin: 0;"><strong>📌 Tindakan:</strong> {tindakan}</p>
         <p style="margin: 0.5rem 0 0 0;"><strong>💰 Rekomendasi Budget:</strong> {format_rp(rekomendasi_budget)}</p>
     </div>
     """, unsafe_allow_html=True)
 elif warna == "success":
     st.markdown(f"""
-    <div style="background: #d1fae5; border-radius: 1rem; padding: 1.2rem; border-left: 4px solid #10b981;">
+    <div style="background: #d1fae5; border-radius: 1rem; padding: 1rem; border-left: 4px solid #10b981;">
         <h4 style="margin: 0 0 0.5rem 0;">{prioritas}</h4>
-        <p style="margin: 0; font-size: 1rem;"><strong>📌 Tindakan:</strong> {tindakan}</p>
+        <p style="margin: 0;"><strong>📌 Tindakan:</strong> {tindakan}</p>
         <p style="margin: 0.5rem 0 0 0;"><strong>💰 Rekomendasi Budget:</strong> {format_rp(rekomendasi_budget)}</p>
     </div>
     """, unsafe_allow_html=True)
 else:
     st.markdown(f"""
-    <div style="background: #dbeafe; border-radius: 1rem; padding: 1.2rem; border-left: 4px solid #3b82f6;">
+    <div style="background: #dbeafe; border-radius: 1rem; padding: 1rem; border-left: 4px solid #3b82f6;">
         <h4 style="margin: 0 0 0.5rem 0;">{prioritas}</h4>
-        <p style="margin: 0; font-size: 1rem;"><strong>📌 Tindakan:</strong> {tindakan}</p>
+        <p style="margin: 0;"><strong>📌 Tindakan:</strong> {tindakan}</p>
         <p style="margin: 0.5rem 0 0 0;"><strong>💰 Rekomendasi Budget:</strong> {format_rp(rekomendasi_budget)}</p>
     </div>
     """, unsafe_allow_html=True)
-
-# ==================== TABEL RINGKASAN ====================
-with st.expander("📋 **Detail Perhitungan**"):
-    st.markdown(f"""
-    | Metrik | Nilai |
-    |--------|-------|
-    | CTR | {ctr:.1f}% |
-    | ROAS Aktual | {roas_aktual:.1f}x |
-    | ROAS BEP | {roas_bep:.1f}x |
-    | Target ROAS Setting | {target_roas:.1f}x |
-    | CPC | {format_rp(cpc)} |
-    | CPA | {format_rp(cpa)} |
-    | Budget Setting | {format_rp(budget_set)} |
-    | Budget Terserap | {format_rp(budget_spent)} ({budget_terserap_persen:.0f}%) |
-    | Omset | {format_rp(sales)} |
-    | Order | {orders} |
-    | Laba Kotor per Produk | {format_rp(laba_kotor)} |
-    | Estimasi Profit | {format_rp(profit_estimasi)} |
-    """)
 
 # ==================== TIPS CEPAT ====================
 with st.expander("💡 **Tips Cepat Baca Data Iklan**"):
