@@ -312,25 +312,133 @@ if is_demo_expired():
 if st.session_state.get("demo_mode", False):
     show_demo_timer()
 
-# ==================== TAMPILAN UTAMA ====================
-col_logout1, col_logout2, col_logout3 = st.columns([6, 1, 1])
-with col_logout3:
-    if is_premium_user():
-        if st.button("🚪 Logout"):
-            st.session_state["authenticated"] = False
-            st.rerun()
-    elif st.session_state.get("demo_mode", False):
-        st.markdown('<span class="premium-badge">🎁 DEMO MODE (5 menit)</span>', unsafe_allow_html=True)
+# ==================== DASHBOARD PREMIUM (SETELAH LOGIN) ====================
 
-# Header
-st.markdown("""
-<div class="main-header">
-    <div class="logo-container">
-        <div style="background: white; border-radius: 0.6rem; padding: 0.2rem 0.6rem;"><span style="font-size: 1.2rem;">🩺</span></div>
-        <div class="logo-text"><h1>Arkidigital</h1><p>Solusi Digital Marketing Terbaik untuk Bisnis Anda</p></div>
+# Header Premium dengan sapaan
+st.markdown(f"""
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 1rem; margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div>
+            <h1 style="color: white; margin: 0; font-size: 1.5rem;">🩺 DOCTOR ADS PREMIUM</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 0.3rem 0 0 0;">Analisa Iklan TikTok & Shopee → Rekomendasi Perbaikan Instan</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.2); padding: 0.3rem 1rem; border-radius: 2rem;">
+            <span style="color: white; font-size: 0.8rem;">🎁 {datetime.now().strftime('%d %B %Y')}</span>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+# ==================== METRIC CARDS PREMIUM ====================
+st.markdown("### 📊 **Dashboard Performa**")
+st.markdown("---")
+
+# Buat 4 kolom untuk metric cards
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1rem; border-radius: 1rem; border-left: 4px solid #667eea;">
+        <p style="color: #888; margin: 0; font-size: 0.7rem;">TOTAL BELANJA IKLAN</p>
+        <h2 style="color: white; margin: 0.3rem 0; font-size: 1.3rem;">Rp0</h2>
+        <p style="color: #667eea; margin: 0; font-size: 0.6rem;">↓ Belum ada data</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1rem; border-radius: 1rem; border-left: 4px solid #667eea;">
+        <p style="color: #888; margin: 0; font-size: 0.7rem;">TOTAL OMSET</p>
+        <h2 style="color: white; margin: 0.3rem 0; font-size: 1.3rem;">Rp0</h2>
+        <p style="color: #667eea; margin: 0; font-size: 0.6rem;">↓ Belum ada data</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1rem; border-radius: 1rem; border-left: 4px solid #667eea;">
+        <p style="color: #888; margin: 0; font-size: 0.7rem;">RATA-RATA ROAS</p>
+        <h2 style="color: white; margin: 0.3rem 0; font-size: 1.3rem;">0.0x</h2>
+        <p style="color: #667eea; margin: 0; font-size: 0.6rem;">↓ Belum ada data</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col4:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1rem; border-radius: 1rem; border-left: 4px solid #667eea;">
+        <p style="color: #888; margin: 0; font-size: 0.7rem;">ESTIMASI PROFIT</p>
+        <h2 style="color: white; margin: 0.3rem 0; font-size: 1.3rem;">Rp0</h2>
+        <p style="color: #667eea; margin: 0; font-size: 0.6rem;">↓ Belum ada data</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ==================== GRAFIK & ANALISIS ====================
+st.markdown("---")
+st.markdown("### 📈 **Performa Iklan (Line Chart)**")
+st.markdown("*Data akan muncul setelah melakukan analisis*")
+
+# Placeholder untuk grafik
+st.info("💡 Lakukan analisis iklan terlebih dahulu untuk melihat grafik performa")
+
+# ==================== FITUR PREMIUM HIGHLIGHT ====================
+st.markdown("---")
+st.markdown("### ✨ **Fitur Premium**")
+
+col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+
+with col_f1:
+    st.markdown("""
+    <div style="background: #1a1a2e; padding: 1rem; border-radius: 1rem; text-align: center;">
+        <div style="font-size: 2rem;">📊</div>
+        <h4 style="color: white; margin: 0.5rem 0;">Analisa Iklan</h4>
+        <p style="color: #888; font-size: 0.7rem;">CTR, ROAS, CPC, Budget</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_f2:
+    st.markdown("""
+    <div style="background: #1a1a2e; padding: 1rem; border-radius: 1rem; text-align: center;">
+        <div style="font-size: 2rem;">🎯</div>
+        <h4 style="color: white; margin: 0.5rem 0;">Rekomendasi</h4>
+        <p style="color: #888; font-size: 0.7rem;">Scale 30% | Turunkan ROAS</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_f3:
+    st.markdown("""
+    <div style="background: #1a1a2e; padding: 1rem; border-radius: 1rem; text-align: center;">
+        <div style="font-size: 2rem;">📝</div>
+        <h4 style="color: white; margin: 0.5rem 0;">Generator</h4>
+        <p style="color: #888; font-size: 0.7rem;">SEO + Deskripsi + Hook</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_f4:
+    st.markdown("""
+    <div style="background: #1a1a2e; padding: 1rem; border-radius: 1rem; text-align: center;">
+        <div style="font-size: 2rem;">💎</div>
+        <h4 style="color: white; margin: 0.5rem 0;">ROAS BEP</h4>
+        <p style="color: #888; font-size: 0.7rem;">Hitung otomatis</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ==================== INPUT DATA IKLAN ====================
+st.markdown("---")
+st.markdown("### 📝 **Input Data Iklan**")
+
+col_input1, col_input2 = st.columns(2)
+
+with col_input1:
+    impressions = st.number_input("👁️ Pengunjung (Impressions)", min_value=0, value=10000, step=1000)
+    clicks = st.number_input("🖱️ Klik (Clicks)", min_value=0, value=300, step=50)
+    budget_set = st.number_input("💵 Budget Setting (Rp/hari)", min_value=0, value=100000, step=10000)
+
+with col_input2:
+    budget_spent = st.number_input("💸 Budget Terserap (Rp/hari)", min_value=0, value=90000, step=5000)
+    target_roas = st.number_input("🎯 Target ROAS Setting", min_value=1.0, value=6.0, step=0.5)
+    sales = st.number_input("💰 Omset (Rp)", min_value=0, value=600000, step=50000)
+    orders = st.number_input("📦 Jumlah Order", min_value=0, value=6, step=1)
+    platform = st.selectbox("📱 Platform", ["Shopee", "TikTok"])
 
 # ==================== DATABASE PRODUK ====================
 with st.sidebar:
