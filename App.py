@@ -144,7 +144,7 @@ def show_demo_timer():
             """, unsafe_allow_html=True)
         
         # Tombol beli di sidebar demo
-        if st.sidebar.button("💎 Beli Premium Rp97rb", use_container_width=True):
+        if st.sidebar.button("💎 Beli Premium Rp147rb", use_container_width=True):
             # Redirect ke WhatsApp
             wa_link = "https://wa.me/6288228878258?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
             st.markdown(f'<meta http-equiv="refresh" content="0; url={wa_link}">', unsafe_allow_html=True)
@@ -193,7 +193,7 @@ if not is_premium_user() and not st.session_state.get("demo_mode", False):
 if is_demo_expired():
     st.warning("⏰ **Demo Anda telah berakhir!** Beli premium untuk akses penuh.")
     if st.button("💎 Beli Premium Rp147rb", use_container_width=True):
-        wa_link = "https://wa.me/6281234567890?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
+        wa_link = "https://wa.me/6288228878258?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
         st.markdown(f'<meta http-equiv="refresh" content="0; url={wa_link}">', unsafe_allow_html=True)
     st.stop()
 
@@ -201,7 +201,7 @@ if is_demo_expired():
 if st.session_state.get("demo_mode", False) and not can_do_demo_analysis():
     st.warning(f"⚠️ **Demo terbatas maksimal {MAX_DEMO_ANALYSIS} kali analisis.** Beli premium untuk akses unlimited!")
     if st.button("💎 Beli Premium Rp147rb", use_container_width=True):
-        wa_link = "https://wa.me/6281234567890?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
+        wa_link = "https://wa.me/6288228878258?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Ads%20Doctor%20Premium%20Rp147rb"
         st.markdown(f'<meta http-equiv="refresh" content="0; url={wa_link}">', unsafe_allow_html=True)
     st.stop()
 
