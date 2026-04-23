@@ -4,6 +4,22 @@ import numpy as np
 from datetime import datetime, timedelta
 import hashlib
 
+# ==================== INISIALISASI SESSION STATE ====================
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "demo_mode" not in st.session_state:
+    st.session_state["demo_mode"] = False
+if "demo_start_time" not in st.session_state:
+    st.session_state["demo_start_time"] = None
+if "demo_analysis_count" not in st.session_state:
+    st.session_state["demo_analysis_count"] = 0
+if "demo_generator_count" not in st.session_state:
+    st.session_state["demo_generator_count"] = 0
+if "products" not in st.session_state:
+    st.session_state["products"] = []
+if "demo_history" not in st.session_state:
+    st.session_state["demo_history"] = {}
+
 # ==================== KONFIGURASI ====================
 ADMIN_USERNAME = "arkidigital"
 ADMIN_PASSWORD = "Arkidigital2026"
@@ -22,8 +38,6 @@ def get_device_fingerprint():
     return hashlib.md5(f"{user_agent}_{ip}".encode()).hexdigest()
 
 def load_demo_history():
-    if "demo_history" not in st.session_state:
-        st.session_state.demo_history = {}
     return st.session_state.demo_history
 
 def can_start_demo(fingerprint):
@@ -122,8 +136,6 @@ def login_or_demo():
 
 # ==================== DATABASE PRODUK ====================
 def load_products():
-    if "products" not in st.session_state:
-        st.session_state.products = []
     return st.session_state.products
 
 def save_product(p):
@@ -213,7 +225,7 @@ with st.sidebar:
         roas_bep = harga_jual / laba_kotor if laba_kotor > 0 else 999
         st.caption("💎 Beli premium untuk simpan produk")
     
-    # ==================== HITUNG ROAS BEP ====================
+    # ==================== HITUNG ROAS BEP (KALKULATOR) ====================
     st.markdown("---")
     st.markdown("## 🎯 **Hitung ROAS BEP**")
     
@@ -243,14 +255,6 @@ with st.sidebar:
             <p style="color: #888; margin: 0.3rem 0 0 0; font-size: 0.65rem;">Artinya: Setiap Rp1 iklan harus menghasilkan minimal Rp{roas_bep_hasil:.1f} penjualan agar tidak rugi.</p>
         </div>
         """, unsafe_allow_html=True)
-        
-        if st.button("📋 Gunakan ROAS BEP ini ke analisis", key="gunakan_bep"):
-            st.session_state["bep_hj"] = hj_bep
-            st.session_state["bep_modal"] = modal_bep
-            st.session_state["bep_admin"] = admin_bep
-            st.session_state["bep_laba"] = laba_kotor_bep
-            st.session_state["bep_roas"] = roas_bep_hasil
-            st.success(f"✅ ROAS BEP {roas_bep_hasil:.1f}x siap digunakan!")
     
     with st.expander("📋 **Cek Kelayakan Produk**"):
         pernah = st.radio("Produk pernah laku?", ["Ya","Tidak"], horizontal=True, key="pernah_laku")
@@ -313,7 +317,11 @@ if analize:
         budget_terserap_persen = (budget_spent / budget_set * 100) if budget_set > 0 else 0
         profit_estimasi = (laba_kotor * orders) - budget_spent if orders > 0 else -budget_spent
     else:
-        ctr = 0; cpc = 0; roas_aktual = 0; budget_terserap_persen = 0; profit_estimasi = -budget_spent
+        ctr = 0
+        cpc = 0
+        roas_aktual = 0
+        budget_terserap_persen = 0
+        profit_estimasi = -budget_spent
     
     def format_rp(angka):
         if angka >= 1_000_000:
