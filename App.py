@@ -32,7 +32,7 @@ MAX_DEMO_ANALYSIS = 2
 MAX_DEMO_GENERATOR = 2
 
 # ==================== GEMINI AI CONFIGURATION ====================
-GEMINI_AVAILABLE = False
+GEMINI_AVAILABLE = False  # DI NONAKTIFKAN SAMPAI LIBRARY TERINSTALL
 try:
     import google.generativeai as genai
     API_KEY = st.secrets.get("GEMINI_API_KEY", "")
