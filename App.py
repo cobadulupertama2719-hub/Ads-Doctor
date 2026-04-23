@@ -31,27 +31,60 @@ DEMO_DURATION_MINUTES = 5
 MAX_DEMO_ANALYSIS = 2
 MAX_DEMO_GENERATOR = 2
 
-# ==================== GEMINI AI CONFIGURATION ====================
-GEMINI_AVAILABLE = False  # DI NONAKTIFKAN SAMPAI LIBRARY TERINSTALL
+# ==================== GEMINI AI CONFIGURATION (HTTP Request) ====================
+import requests
+import json
+
+GEMINI_AVAILABLE = False
+GEMINI_API_KEY = None
+
 try:
-    import google.generativeai as genai
-    API_KEY = st.secrets.get("GEMINI_API_KEY", "")
-    if API_KEY and API_KEY != "":
-        genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        GEMINI_AVAILABLE = True
-        st.success("✅ AI Gemini aktif! Generator akan menghasilkan konten AI.")
+    GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
+    if GEMINI_API_KEY and GEMINI_API_KEY != "":
+        # Test API dengan panggilan sederhana
+        test_url = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
+        test_response = requests.get(test_url)
+        if test_response.status_code == 200:
+            GEMINI_AVAILABLE = True
+            st.success("✅ AI Gemini aktif! (HTTP Mode)")
+        else:
+            st.warning("⚠️ API Key Gemini tidak valid")
     else:
-        st.warning("⚠️ API Key Gemini tidak ditemukan. Fitur AI akan menggunakan template statis.")
-except ImportError:
-    st.warning("⚠️ Library Google Generative AI belum terinstall. Jalankan: pip install google-generativeai")
+        st.warning("⚠️ API Key Gemini tidak ditemukan di Secrets")
 except Exception as e:
     st.warning(f"⚠️ Gagal inisialisasi Gemini: {e}")
+
+def call_gemini_api(prompt):
+    """Panggil Gemini API langsung via HTTP requests"""
+    if not GEMINI_AVAILABLE or not GEMINI_API_KEY:
+        return None
+    
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
+    headers = {"Content-Type": "application/json"}
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
+    
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        result = response.json()
+        
+        if "candidates" in result and len(result["candidates"]) > 0:
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+        return None
+    except Exception as e:
+        return None
     
 # ==================== FUNGSI AI GEMINI ====================
 def generate_ai_content(prompt, fallback_text=""):
-    """Generate konten dengan Gemini AI, fallback ke template jika error"""
+    """Generate konten dengan Gemini AI via HTTP"""
     if not GEMINI_AVAILABLE:
+        return fallback_text
+    try:
+        result = call_gemini_api(prompt)
+        if result:
+            return result
+        return fallback_text
+    except:
         return fallback_text
     try:
         response = model.generate_content(prompt)
