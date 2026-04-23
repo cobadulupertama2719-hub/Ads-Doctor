@@ -1,37 +1,30 @@
 import streamlit as st
-
-# 1. SELALU taruh set_page_config di baris pertama setelah import
-st.set_page_config(
-    page_title="Advertising Command Center",
-    layout="wide", # Membuat tampilan lebih luas ke samping
-    initial_sidebar_state="collapsed"
-)
-
-# 2. Masukkan kode CSS untuk menyembunyikan header di sini
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            header {visibility: hidden;}
-            footer {visibility: hidden;}
-            .stAppDeployButton {display:none;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
-
-# 3. Baru masukkan konten aplikasi Anda (Judul, Input, Kalkulator, dll)
-st.title("ADVERTISING COMMAND CENTER")
-
-# Contoh input seperti di gambar Anda
-harga_jual = st.number_input("Harga Jual (Rp)", value=150000)
-modal = st.number_input("Modal (Rp)", value=75000)
-
-import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import hashlib
 import requests
 import json
+
+# 1. SET PAGE CONFIG (WAJIB DI PALING ATAS)
+st.set_page_config(
+    page_title="Advertising Command Center",
+    page_icon="🩺",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# 2. CSS untuk menyembunyikan header default Streamlit
+hide_st_style = """
+<style>
+#MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+footer {visibility: hidden;}
+.stAppDeployButton {display:none;}
+[data-testid="stToolbar"] {display:none;}
+</style>
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # ==================== 1. ULTRA-PREMIUM UI CONFIGURATION ====================
 def apply_premium_style():
@@ -96,36 +89,53 @@ def apply_premium_style():
     </style>
     """, unsafe_allow_html=True)
 
+apply_premium_style()
+
 # ==================== 2. SESSION & LOCK SYSTEM ====================
 if "authenticated" not in st.session_state: st.session_state["authenticated"] = False
 if "demo_mode" not in st.session_state: st.session_state["demo_mode"] = False
 if "demo_start_time" not in st.session_state: st.session_state["demo_start_time"] = None
 if "demo_analysis_count" not in st.session_state: st.session_state["demo_analysis_count"] = 0
 if "products" not in st.session_state: st.session_state["products"] = []
-if "bep_value" not in st.session_state: st.session_state["bep_value"] = 0
+if "analysis_done" not in st.session_state: st.session_state["analysis_done"] = False
+if "last_ctr" not in st.session_state: st.session_state["last_ctr"] = 0
+if "last_roas" not in st.session_state: st.session_state["last_roas"] = 0
+if "last_roas_bep" not in st.session_state: st.session_state["last_roas_bep"] = 0
+if "last_s_rate" not in st.session_state: st.session_state["last_s_rate"] = 0
+if "last_clicks" not in st.session_state: st.session_state["last_clicks"] = 0
+if "last_orders" not in st.session_state: st.session_state["last_orders"] = 0
+if "last_profit" not in st.session_state: st.session_state["last_profit"] = 0
+if "last_budget_set" not in st.session_state: st.session_state["last_budget_set"] = 0
+if "last_target_roas" not in st.session_state: st.session_state["last_target_roas"] = 0
+if "last_budget_spent" not in st.session_state: st.session_state["last_budget_spent"] = 0
 
 ADMIN_USERNAME = "arkidigital"
 ADMIN_PASSWORD = "Arkidigital2026"
 CHECKOUT_LINK = "https://muhammad-masruri.myscalev.com/checkout-pageku"
 
+# ==================== API KEY CONFIGURATION ====================
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
 def call_gemini_api(prompt):
-    if not GEMINI_API_KEY: return None
+    """Panggil Gemini API via HTTP"""
+    if not GEMINI_API_KEY:
+        return None
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     try:
-        r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
-        if r.status_code == 200:
-            return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=30)
+        if response.status_code == 200:
+            result = response.json()
+            return result["candidates"][0]["content"]["parts"][0]["text"]
         return None
-    except: return None
+    except Exception as e:
+        return None
 
 def format_rp(angka):
     if angka >= 1_000_000: return f"Rp{angka/1_000_000:.1f}JT"
     if angka >= 1000: return f"Rp{angka/1000:.0f}RB"
     return f"Rp{angka:,.0f}"
 
-# ==================== FUNGSI DATABASE PRODUK ====================
+# ==================== DATABASE PRODUK ====================
 def save_product(p):
     products = st.session_state.products
     for i, prod in enumerate(products):
@@ -140,10 +150,123 @@ def delete_product(nama):
     products = st.session_state.products
     st.session_state.products = [p for p in products if p["nama"] != nama]
 
-# ==================== 3. ACCESS CONTROL ====================
-st.set_page_config(page_title="Doctor Ads Elite", page_icon="🩺", layout="wide")
-apply_premium_style()
+# ==================== FUNGSI REKOMENDASI (1-5) ====================
+def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_set, target_roas, budget_spent, ctr):
+    """Menghasilkan rekomendasi berdasarkan aturan 1-5"""
+    rekom_tindakan = ""
+    rekom_roas = target_roas
+    rekom_budget = budget_set
+    prioritas = ""
+    warna = "info"
+    
+    # ATURAN 1: KLIK BANYAK, BUDGET HABIS, ORDER 0 → STOP IKLAN
+    if clicks > 50 and s_rate >= 80 and orders == 0:
+        prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
+        warna = "danger"
+        rekom_budget = budget_set * 0.5
+        rekom_tindakan = f"""🚨 **HENTIKAN IKLAN SEGERA!**
 
+📊 Data: {clicks} klik, budget terserap {s_rate:.0f}%, tapi 0 order.
+
+**Penyebab:** Produk belum layak iklan.
+
+**Yang harus dilakukan:**
+1. Cek harga produk — bandingkan dengan kompetitor
+2. Tambah review & rating (target 10-20 review positif)
+3. Perbaiki deskripsi — fokus ke MANFAAT
+4. Pastikan stok aman
+
+**Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**"""
+    
+    # ATURAN 2: SIAP SCALE
+    elif s_rate >= 85 and roas_aktual >= roas_bep * 1.2:
+        prioritas = "🟢 PRIORITAS 4 - SIAP SCALE"
+        warna = "success"
+        rekom_budget = budget_set * 1.3
+        rekom_tindakan = f"""🚀 **SIAP SCALE!**
+
+📈 ROAS {roas_aktual:.1f}x > BEP {roas_bep:.1f}x (untung)
+💰 Budget terserap {s_rate:.0f}% (hampir habis)
+
+**Aturan SCALE yang benar:**
+✅ Naikkan **BUDGET 30%** menjadi {format_rp(rekom_budget)}
+✅ **PERTAHANKAN** target ROAS di {target_roas:.1f}x
+
+⏰ **Tunggu 3 hari** tanpa perubahan apapun.
+
+📌 Evaluasi setelah 3 hari:
+- Jika ROAS tetap stabil → bisa scale lagi 30%
+- Jika ROAS turun drastis → turunkan budget ke semula"""
+    
+    # ATURAN 3: ROAS PROFIT, BUDGET BELUM HABIS
+    elif roas_aktual >= roas_bep and s_rate < 85:
+        prioritas = "🟡 PRIORITAS 2 - OPTIMASI"
+        warna = "warning"
+        rekom_roas = target_roas - 0.5
+        rekom_tindakan = f"""⚡ **OPTIMASI BUDGET**
+
+✅ ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (untung)
+📊 Budget terserap {s_rate:.0f}% (masih ada sisa Rp{budget_set - budget_spent:,.0f})
+
+**Agar budget habis dan order maksimal:**
+✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
+✅ **JANGAN UBAH BUDGET** (tetap {format_rp(budget_set)})
+
+⏰ **Tunggu 3 hari** tanpa perubahan apapun.
+
+📌 Evaluasi setelah 3 hari:
+- Jika budget sudah habis → siap scale
+- Jika masih belum habis → turunkan ROAS lagi 0.5 poin"""
+    
+    # ATURAN 4: IKLAN RUGI
+    elif roas_aktual < roas_bep and roas_aktual > 0:
+        prioritas = "🔴 PRIORITAS 3 - IKLAN RUGI"
+        warna = "danger"
+        rekom_roas = roas_bep + 0.5
+        rekom_budget = budget_set * 0.7
+        rugi = (roas_bep - roas_aktual) * budget_spent
+        rekom_tindakan = f"""💸 **IKLAN RUGI!**
+
+📉 ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
+💰 Estimasi kerugian: {format_rp(rugi)} dari {format_rp(budget_spent)} yang terpakai
+
+**Penyebab:** Target ROAS terlalu rendah atau produk kurang meyakinkan.
+
+**Solusi:**
+✅ Naikkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
+🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian
+
+**Atau jika produk belum layak:**
+- Berhenti iklan sementara, perbaiki produk (harga, review, deskripsi)"""
+    
+    # ATURAN 5: PERFORMA SEHAT
+    elif roas_aktual >= roas_bep:
+        prioritas = "🟢 PRIORITAS 5 - PANTAU"
+        rekom_tindakan = f"""✅ **PERFORMA SEHAT**
+
+📈 ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x
+💰 Budget terserap {s_rate:.0f}%
+
+**Rekomendasi:**
+✅ Pertahankan setting saat ini
+⏰ Pantau selama **3-5 hari** tanpa perubahan
+
+📌 Jika konsisten (ROAS tetap di atas BEP dan budget habis), siap scale dengan menaikkan budget 30% (jangan sentuh ROAS)."""
+    
+    # TAMBAHAN: CTR RENDAH
+    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan:
+        rekom_tindakan += f"""
+
+---
+📸 **MASALAH CTR RENDAH!**
+
+CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
+
+**Solusi:** Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
+    
+    return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
+
+# ==================== 3. ACCESS CONTROL ====================
 demo_expired = False
 if st.session_state.demo_mode and st.session_state.demo_start_time:
     elapsed = (datetime.now() - st.session_state.demo_start_time).total_seconds()
@@ -227,11 +350,9 @@ with col_calc:
     laba_kotor_p = hj - modal - (hj * admin_p / 100)
     laba_setelah_p = laba_kotor_p - target_p
     roas_bep_p = hj / laba_setelah_p if laba_setelah_p > 0 else 999
-    st.session_state["bep_value"] = roas_bep_p
     
     st.markdown(f'<div style="text-align:center;"><h1 style="color:#00E5A0; font-size:4rem; margin:0;">{roas_bep_p:.2f}x</h1><p style="color:#888;">TARGET ROAS BEP ANDA</p></div>', unsafe_allow_html=True)
     
-    # Tampilkan produk tersimpan di database
     if st.session_state.products:
         st.markdown("---")
         st.markdown("**📋 Produk Tersimpan:**")
@@ -269,32 +390,43 @@ orders = ip3.number_input("📦 Orders", value=8, key="orders_main")
 budget_set = ip3.number_input("Budget Setting", value=200000, key="budget_set_main")
 target_roas_p = st.number_input("🎯 Target ROAS", value=6.0, key="target_roas_main")
 
-# ==================== PENTING: BATAS ANALISIS DEMO ====================
-if st.session_state.demo_mode and st.session_state.demo_analysis_count >= 2:
-    st.warning("⚠️ Demo terbatas 2x analisis! Upgrade untuk unlimited.")
-    st.markdown(f'<a href="{CHECKOUT_LINK}" target="_blank" class="cta-upgrade">💎 UNLOCK PREMIUM</a>', unsafe_allow_html=True)
-else:
-    if st.button("RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics"):
-        if st.session_state.demo_mode:
-            st.session_state.demo_analysis_count += 1
-        
-        # Hitung metrik
-        ctr_p = (clicks/impressions*100) if impressions > 0 else 0
-        roas_akt_p = (sales/budget_spent) if budget_spent > 0 else 0
-        s_rate_p = (budget_spent/budget_set*100) if budget_set > 0 else 0
-        profit_est_p = (laba_kotor_p * orders) - budget_spent if orders > 0 else -budget_spent
-        cpc_p = budget_spent/clicks if clicks > 0 else 0
-
-        m1, m2, m3, m4 = st.columns(4)
-        m1.markdown(f'<div class="premium-card"><h5>📈 CTR</h5><h2 style="color:white;">{ctr_p:.2f}%</h2><p style="color:#888;">{"✅ Normal" if ctr_p >= 2 else "⚠️ Rendah"}</p></div>', unsafe_allow_html=True)
-        m2.markdown(f'<div class="premium-card"><h5>💰 ROAS</h5><h2 style="color:#00E5A0;">{roas_akt_p:.2f}x</h2><p style="color:#888;">{"🟢 Profit" if roas_akt_p >= roas_bep_p else "🔴 Rugi"}</p></div>', unsafe_allow_html=True)
-        m3.markdown(f'<div class="premium-card"><h5>💎 PROFIT</h5><h2 style="color:{"#00E5A0" if profit_est_p > 0 else "#ff6b6b"};">{format_rp(profit_est_p)}</h2><p style="color:#888;">{"Untung" if profit_est_p > 0 else "Rugi"}</p></div>', unsafe_allow_html=True)
-        m4.markdown(f'<div class="premium-card"><h5>🎯 BEP</h5><h2 style="color:white;">{roas_bep_p:.2f}x</h2><p style="color:#888;">{"✅ Aman" if roas_akt_p >= roas_bep_p else "⚠️ Dibawah"}</p></div>', unsafe_allow_html=True)
-
-        # ==================== AI SUMMARY (KESIMPULAN OTOMATIS) ====================
-        if GEMINI_API_KEY:
-            with st.spinner("🤖 AI sedang menganalisis..."):
-                summary_prompt = f"""Berdasarkan data iklan:
+# Tombol Analisis
+if st.button("RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics"):
+    # Update session state
+    if st.session_state.demo_mode:
+        st.session_state.demo_analysis_count += 1
+    
+    # Hitung metrik
+    ctr_p = (clicks/impressions*100) if impressions > 0 else 0
+    roas_akt_p = (sales/budget_spent) if budget_spent > 0 else 0
+    s_rate_p = (budget_spent/budget_set*100) if budget_set > 0 else 0
+    profit_est_p = (laba_kotor_p * orders) - budget_spent if orders > 0 else -budget_spent
+    cpc_p = budget_spent/clicks if clicks > 0 else 0
+    
+    # Simpan ke session state untuk ditampilkan
+    st.session_state.analysis_done = True
+    st.session_state.last_ctr = ctr_p
+    st.session_state.last_roas = roas_akt_p
+    st.session_state.last_roas_bep = roas_bep_p
+    st.session_state.last_s_rate = s_rate_p
+    st.session_state.last_clicks = clicks
+    st.session_state.last_orders = orders
+    st.session_state.last_profit = profit_est_p
+    st.session_state.last_budget_set = budget_set
+    st.session_state.last_budget_spent = budget_spent
+    st.session_state.last_target_roas = target_roas_p
+    
+    # Metric Cards
+    m1, m2, m3, m4 = st.columns(4)
+    m1.markdown(f'<div class="premium-card"><h5>📈 CTR</h5><h2 style="color:white;">{ctr_p:.2f}%</h2><p style="color:#888;">{"✅ Normal" if ctr_p >= 2 else "⚠️ Rendah"}</p></div>', unsafe_allow_html=True)
+    m2.markdown(f'<div class="premium-card"><h5>💰 ROAS</h5><h2 style="color:#00E5A0;">{roas_akt_p:.2f}x</h2><p style="color:#888;">{"🟢 Profit" if roas_akt_p >= roas_bep_p else "🔴 Rugi"}</p></div>', unsafe_allow_html=True)
+    m3.markdown(f'<div class="premium-card"><h5>💎 PROFIT</h5><h2 style="color:{"#00E5A0" if profit_est_p > 0 else "#ff6b6b"};">{format_rp(profit_est_p)}</h2><p style="color:#888;">{"Untung" if profit_est_p > 0 else "Rugi"}</p></div>', unsafe_allow_html=True)
+    m4.markdown(f'<div class="premium-card"><h5>🎯 BEP</h5><h2 style="color:white;">{roas_bep_p:.2f}x</h2><p style="color:#888;">{"✅ Aman" if roas_akt_p >= roas_bep_p else "⚠️ Dibawah"}</p></div>', unsafe_allow_html=True)
+    
+    # ==================== AI SUMMARY ====================
+    if GEMINI_API_KEY:
+        with st.spinner("🤖 AI sedang menganalisis..."):
+            summary_prompt = f"""Berdasarkan data iklan:
 - CTR: {ctr_p:.1f}%
 - ROAS: {roas_akt_p:.1f}x
 - BEP: {roas_bep_p:.1f}x
@@ -304,221 +436,80 @@ else:
 
 Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah iklan UNTUNG atau RUGI, dan rekomendasi singkat.
 """
-                ai_summary = call_gemini_api(summary_prompt)
-                if ai_summary:
-                    st.markdown(f'<div class="premium-card"><h3>🤖 AI Insight</h3><p style="font-size:1.1rem;">{ai_summary}</p></div>', unsafe_allow_html=True)
-
-        # ==================== REKOMENDASI LENGKAP (ATURAN 1-5 + TAMBAHAN) ====================
-        st.markdown("### 🎯 Rekomendasi Strategis")
-        rekom_tindakan = ""
-        rekom_roas = target_roas_p
-        rekom_budget = budget_set
-        prioritas_p = ""
-        warna_p = "info"
-        
-        # ATURAN 1: KLIK BANYAK, BUDGET HABIS, ORDER 0 → STOP IKLAN
-        if clicks > 50 and s_rate_p >= 80 and orders == 0:
-            prioritas_p = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
-            warna_p = "danger"
-            rekom_budget = budget_set * 0.5
-            rekom_tindakan = f"""🚨 **HENTIKAN IKLAN SEGERA!**
-📊 Data: {clicks} klik, budget terserap {s_rate_p:.0f}%, tapi 0 order.
-
-**Penyebab:** Produk belum layak iklan.
-
-**Yang harus dilakukan (JANGAN lanjutkan iklan sebelum produk siap):**
-1. Cek harga produk — bandingkan dengan kompetitor
-2. Tambah review & rating (target 10-20 review positif)
-3. Perbaiki deskripsi — fokus ke MANFAAT, bukan spesifikasi
-4. Pastikan stok aman
-
-**Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**"""
-        
-        # ATURAN 2: SIAP SCALE (Budget habis, ROAS bagus)
-        elif s_rate_p >= 85 and roas_akt_p >= roas_bep_p * 1.2:
-            prioritas_p = "🟢 PRIORITAS 4 - SIAP SCALE"
-            warna_p = "success"
-            rekom_budget = budget_set * 1.3
-            profit_scale = profit_est_p * 1.3
-            rekom_tindakan = f"""🚀 **SIAP SCALE!**
-
-📈 ROAS {roas_akt_p:.1f}x > BEP {roas_bep_p:.1f}x (untung)
-💰 Budget terserap {s_rate_p:.0f}% (hampir habis)
-
-**Aturan SCALE yang benar:**
-✅ Naikkan **BUDGET 30%** menjadi {format_rp(rekom_budget)}
-✅ **PERTAHANKAN** target ROAS di {target_roas_p:.1f}x
-💰 Estimasi profit setelah scale: {format_rp(profit_scale)}
-
-⏰ **Tunggu 3 hari** tanpa perubahan apapun.
-
-📌 Evaluasi setelah 3 hari:
-- Jika ROAS tetap stabil → bisa scale lagi 30%
-- Jika ROAS turun drastis → turunkan budget ke semula"""
-        
-        # ATURAN 3: ROAS PROFIT, BUDGET BELUM HABIS
-        elif roas_akt_p >= roas_bep_p and s_rate_p < 85:
-            prioritas_p = "🟡 PRIORITAS 2 - OPTIMASI"
-            warna_p = "warning"
-            rekom_roas = target_roas_p - 0.5
-            rekom_tindakan = f"""⚡ **OPTIMASI BUDGET**
-
-✅ ROAS {roas_akt_p:.1f}x ≥ BEP {roas_bep_p:.1f}x (untung)
-📊 Budget terserap {s_rate_p:.0f}% (masih ada sisa Rp{budget_set - budget_spent:,.0f})
-
-**Agar budget habis dan order maksimal:**
-✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
-✅ **JANGAN UBAH BUDGET** (tetap {format_rp(budget_set)})
-
-⏰ **Tunggu 3 hari** tanpa perubahan apapun.
-
-📌 Evaluasi setelah 3 hari:
-- Jika budget sudah habis → siap scale
-- Jika masih belum habis → turunkan ROAS lagi 0.5 poin"""
-        
-        # ATURAN 4: IKLAN RUGI (ROAS < BEP)
-        elif roas_akt_p < roas_bep_p and roas_akt_p > 0:
-            prioritas_p = "🔴 PRIORITAS 3 - IKLAN RUGI"
-            warna_p = "danger"
-            rekom_roas = roas_bep_p + 0.5
-            rugi = (roas_bep_p - roas_akt_p) * budget_spent
-            rekom_budget = budget_set * 0.7
-            rekom_tindakan = f"""💸 **IKLAN RUGI TERUS!**
-
-📉 ROAS {roas_akt_p:.1f}x < BEP {roas_bep_p:.1f}x
-💰 Estimasi kerugian: {format_rp(rugi)} dari {format_rp(budget_spent)} yang terpakai
-
-**Penyebab:** Target ROAS terlalu rendah atau produk kurang meyakinkan.
-
-**Solusi:**
-✅ Naikkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
-🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian
-
-**Atau jika produk belum layak:**
-- Berhenti iklan sementara, perbaiki produk (harga, review, deskripsi)"""
-        
-        # ATURAN 5: PERFORMA SEHAT
-        elif roas_akt_p >= roas_bep_p:
-            prioritas_p = "🟢 PRIORITAS 5 - PANTAU"
-            rekom_tindakan = f"""✅ **PERFORMA SEHAT**
-
-📈 ROAS {roas_akt_p:.1f}x ≥ BEP {roas_bep_p:.1f}x
-💰 Budget terserap {s_rate_p:.0f}%
-
-**Rekomendasi:**
-✅ Pertahankan setting saat ini
-⏰ Pantau selama **3-5 hari** tanpa perubahan
-
-📌 Jika konsisten (ROAS tetap di atas BEP dan budget habis), siap scale dengan menaikkan budget 30% (jangan sentuh ROAS)."""
-        
-        # TAMBAHAN: MASALAH CTR RENDAH
-        if ctr_p < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan and "PRIORITAS 1" not in prioritas_p:
-            rekom_tindakan += f"""
-
----
-📸 **MASALAH CTR RENDAH!**
-
-CTR {ctr_p:.1f}% < 2% → Iklan kurang menarik.
-
-**Solusi:** Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru.
-
-🎨 **Rekomendasi visual:**
-- Gunakan warna kontras (merah/kuning untuk promo)
-- Tampilkan produk dari angle terbaik
-- Tambahkan teks besar di 3 detik pertama video"""
-        
-        # TAMBAHAN: MASALAH CPC MAHAL
-        if cpc_p > 3000 and clicks > 0:
-            rekom_tindakan += f"""
-
----
-💰 **MASALAH CPC MAHAL!**
-
-CPC {format_rp(cpc_p)} > Rp3.000 → Biaya per klik terlalu tinggi.
-
-**Solusi:**
-- Turunkan target ROAS 0.5-1 poin untuk memperluas audience
-- Ganti kreatif iklan agar lebih relevan
-- Perluas target audiens (jangan terlalu sempit)"""
-
-        # TAMBAHAN: JANGKAUAN SEMPIT
-        if impressions < 5000 and roas_akt_p > roas_bep_p * 1.5:
-            rekom_tindakan += f"""
-
----
-🟡 **JANGKAUAN SEMPIT!**
-
-Hanya {impressions:,.0f} tayangan, tapi ROAS {roas_akt_p:.1f}x tinggi.
-
-**Solusi:**
-- Longgarkan target ROAS (turunkan 0.5-1 poin)
-- Naikkan budget 20-30%
-- Biarkan 3-5 hari, pantau apakah jangkauan membesar"""
-
-        bg_c = {"danger":"#fee2e2", "warning":"#fef3c7", "success":"#d1fae5", "info":"#dbeafe"}.get(warna_p, "#f0f0ff")
-        br_c = {"danger":"#dc2626", "warning":"#f59e0b", "success":"#10b981", "info":"#3b82f6"}.get(warna_p, "#667eea")
-        
-        st.markdown(f"""
-        <div style="background:{bg_c}; border-radius:1rem; padding:2rem; border-left:10px solid {br_c}; margin:1rem 0; color: #1a1a1a;">
-            <h3 style="margin:0 0 0.5rem 0; font-weight: 800;">{prioritas_p}</h3>
-            <p style="font-size:1.15rem; line-height:1.6;">{rekom_tindakan.replace(chr(10), '<br>')}</p>
-            <hr style="border:0.5px solid {br_c}; opacity:0.3;">
-            <p><strong>💰 Budget Rekomendasi:</strong> {format_rp(rekom_budget)} | <strong>🎯 Target ROAS:</strong> {rekom_roas:.1f}x</p>
-        </div>
-        """, unsafe_allow_html=True)
+            ai_summary = call_gemini_api(summary_prompt)
+            if ai_summary:
+                st.markdown(f'<div class="premium-card"><h3>🤖 AI Insight</h3><p style="font-size:1.1rem;">{ai_summary}</p></div>', unsafe_allow_html=True)
+    
+    # ==================== REKOMENDASI 1-5 (WAJIB MUNCUL) ====================
+    st.markdown("### 🎯 Rekomendasi Strategis")
+    
+    rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna = generate_rekomendasi(
+        roas_akt_p, roas_bep_p, s_rate_p, clicks, orders, 
+        budget_set, target_roas_p, budget_spent, ctr_p
+    )
+    
+    bg_c = {"danger":"#fee2e2", "warning":"#fef3c7", "success":"#d1fae5", "info":"#dbeafe"}.get(warna, "#f0f0ff")
+    br_c = {"danger":"#dc2626", "warning":"#f59e0b", "success":"#10b981", "info":"#3b82f6"}.get(warna, "#667eea")
+    
+    st.markdown(f"""
+    <div style="background:{bg_c}; border-radius:1rem; padding:2rem; border-left:10px solid {br_c}; margin:1rem 0; color: #1a1a1a;">
+        <h3 style="margin:0 0 0.5rem 0; font-weight: 800;">{prioritas}</h3>
+        <p style="font-size:1.15rem; line-height:1.6;">{rekom_tindakan.replace(chr(10), '<br>')}</p>
+        <hr style="border:0.5px solid {br_c}; opacity:0.3;">
+        <p><strong>💰 Budget Rekomendasi:</strong> {format_rp(rekom_budget)} | <strong>🎯 Target ROAS:</strong> {rekom_roas:.1f}x</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== PREDIKSI SCALE (Jika kondisi terpenuhi) ====================
-if 'roas_akt_p' in locals() and roas_akt_p >= roas_bep_p * 1.2:
+if st.session_state.analysis_done and st.session_state.last_roas >= st.session_state.last_roas_bep * 1.2:
     st.markdown('<div class="premium-card"><h3>📈 Prediksi Scale</h3>', unsafe_allow_html=True)
-    new_budget_pred = budget_set * 1.3
-    prediksi_profit = profit_est_p * 1.25 if 'profit_est_p' in locals() else 0
+    new_budget_pred = st.session_state.last_budget_set * 1.3
+    prediksi_profit = st.session_state.last_profit * 1.25
     
     st.markdown(f"""
     <div style="background:rgba(0,229,160,0.1); border-radius:16px; padding:1.5rem;">
         <p><strong>💰 Jika Naikkan Budget 30%:</strong> {format_rp(new_budget_pred)}/hari</p>
-        <p><strong>📈 Estimasi ROAS:</strong> {roas_akt_p * 0.95:.1f}x - {roas_akt_p * 1.05:.1f}x</p>
+        <p><strong>📈 Estimasi ROAS:</strong> {st.session_state.last_roas * 0.95:.1f}x - {st.session_state.last_roas * 1.05:.1f}x</p>
         <p><strong>💎 Estimasi Profit:</strong> {format_rp(prediksi_profit)}/hari</p>
-        <p><strong>⚠️ Level Resiko:</strong> Rendah (konsisten)</p>
-        <p><strong>📌 Tips:</strong> Naikkan bertahap, pantau 3 hari, jangan ubah ROAS bersamaan.</p>
+        <p><strong>⚠️ Level Resiko:</strong> Rendah</p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== PREDIKSI ROAS 7 HARI ====================
-if 'roas_akt_p' in locals() and roas_akt_p > 0:
+# ==================== PREDIKSI 7 HARI ====================
+if st.session_state.analysis_done and st.session_state.last_roas > 0:
     st.markdown('<div class="premium-card"><h3>📊 Prediksi 7 Hari ke Depan</h3>', unsafe_allow_html=True)
     
-    if roas_akt_p >= roas_bep_p:
-        trend = "stabil" if s_rate_p > 70 else "meningkat"
-        prediksi = f"💰 Kemungkinan ROAS akan {trend} di kisaran {roas_akt_p * 0.9:.1f}x - {roas_akt_p * 1.1:.1f}x"
+    if st.session_state.last_roas >= st.session_state.last_roas_bep:
+        trend = "stabil" if st.session_state.last_s_rate > 70 else "meningkat"
+        prediksi = f"💰 Kemungkinan ROAS akan {trend} di kisaran {st.session_state.last_roas * 0.9:.1f}x - {st.session_state.last_roas * 1.1:.1f}x"
     else:
         prediksi = f"⚠️ ROAS saat ini di bawah BEP. Segera ambil tindakan koreksi sesuai rekomendasi di atas."
     
     st.markdown(f"""
     <div style="background:rgba(255,215,0,0.1); border-radius:16px; padding:1.5rem;">
         <p>{prediksi}</p>
-        <p><strong>📌 Rekomendasi:</strong> {'Pertahankan strategi' if roas_akt_p >= roas_bep_p else 'Ikuti rekomendasi optimasi di atas'}</p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== REKOMENDASI BUDGET BESOK ====================
-if 'roas_akt_p' in locals() and roas_akt_p > 0:
+if st.session_state.analysis_done and st.session_state.last_roas > 0:
     st.markdown('<div class="premium-card"><h3>💰 Rekomendasi Budget Besok</h3>', unsafe_allow_html=True)
     
-    if s_rate_p >= 85 and roas_akt_p >= roas_bep_p:
-        rekom_budget_bsk = budget_set * 1.3
+    if st.session_state.last_s_rate >= 85 and st.session_state.last_roas >= st.session_state.last_roas_bep:
+        rekom_budget_bsk = st.session_state.last_budget_set * 1.3
         pesan = f"🚀 Naikkan menjadi {format_rp(rekom_budget_bsk)} karena performa bagus & budget habis"
-    elif s_rate_p < 50:
-        rekom_budget_bsk = budget_set
+    elif st.session_state.last_s_rate < 50:
+        rekom_budget_bsk = st.session_state.last_budget_set
         pesan = f"🔻 Pertahankan {format_rp(rekom_budget_bsk)}. Turunkan target ROAS dulu agar budget terserap."
-    elif roas_akt_p < roas_bep_p:
-        rekom_budget_bsk = budget_set * 0.7
+    elif st.session_state.last_roas < st.session_state.last_roas_bep:
+        rekom_budget_bsk = st.session_state.last_budget_set * 0.7
         pesan = f"🔻 Turunkan menjadi {format_rp(rekom_budget_bsk)} untuk mengurangi kerugian"
     else:
-        rekom_budget_bsk = budget_set
+        rekom_budget_bsk = st.session_state.last_budget_set
         pesan = f"✅ Pertahankan {format_rp(rekom_budget_bsk)}. Performa sehat, pantau 3-5 hari."
     
     st.markdown(f"""
@@ -528,7 +519,7 @@ if 'roas_akt_p' in locals() and roas_akt_p > 0:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== TANYA JAWAB AI (CHATBOT) ====================
+# ==================== TANYA JAWAB AI ====================
 st.markdown('<div class="premium-card"><h3>💬 Tanya AI (Konsultasi Iklan)</h3>', unsafe_allow_html=True)
 user_question = st.text_input("Pertanyaan kamu:", placeholder="Contoh: ROAS saya turun drastis, harus gimana?", key="chatbot_question")
 if st.button("🤖 Tanya AI", use_container_width=True, key="ask_ai"):
@@ -559,8 +550,8 @@ with tab1:
     if st.button("Generate Elite SEO Title", key="gen_seo"):
         with st.spinner("🧠 AI sedang merancang judul..."):
             if p_name:
-                res = call_gemini_api(f"Buat 5 judul produk untuk '{p_name}' di Shopee. Judul harus menarik, ada emoji, fokus manfaat. Output: satu judul per baris.")
-                st.code(res if res else "🔥 {p_name} - Kualitas Premium\n💯 {p_name} BEST SELLER\n✨ WAJIB PUNYA! {p_name}", language="text")
+                res = call_gemini_api(f"Buat 5 judul untuk '{p_name}' di Shopee. Judul menarik, ada emoji, fokus manfaat. Output per baris.")
+                st.code(res if res else f"🔥 {p_name} - Kualitas Premium\n💯 {p_name} BEST SELLER", language="text")
             else:
                 st.warning("Masukkan nama produk.")
 
@@ -570,9 +561,9 @@ with tab2:
     if st.button("Generate Elite Deskripsi", key="gen_desc"):
         with st.spinner("🧠 AI sedang menulis deskripsi..."):
             if p_name_desc:
-                prompt = f"Buat deskripsi produk untuk '{p_name_desc}' di Shopee. Manfaat: {manfaat}. Gunakan emoji, SEO friendly, ajakan beli."
+                prompt = f"Buat deskripsi untuk '{p_name_desc}' di Shopee. Manfaat: {manfaat}. Gunakan emoji, ajakan beli."
                 res = call_gemini_api(prompt)
-                st.code(res if res else f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}\n🔥 Promo terbatas!", language="markdown")
+                st.code(res if res else f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}", language="markdown")
             else:
                 st.warning("Masukkan nama produk.")
 
@@ -582,22 +573,15 @@ with tab3:
     if st.button("Generate Elite Hook", key="gen_hook"):
         with st.spinner("🧠 AI sedang membuat hook..."):
             if p_name_hook:
-                prompt = f"Buat 5 hook video untuk '{p_name_hook}' di TikTok. Gaya: {gaya}. Hook adalah 3 detik pertama yang bikin stop scroll."
+                prompt = f"Buat 5 hook untuk '{p_name_hook}' di TikTok. Gaya: {gaya}. Hook 3 detik pertama."
                 res = call_gemini_api(prompt)
                 if res:
                     for line in res.strip().split('\n'):
                         if line.strip():
                             st.markdown(f"- 🎬 {line.strip()}")
                 else:
-                    hooks = {
-                        "Problem Solver": [f"😫 Capek cari {p_name_hook}? STOP!", f"❌ Jangan beli {p_name_hook} sebelum lihat ini!"],
-                        "Diskon": [f"🔥 DISKON 50% {p_name_hook}!", f"🎉 FREE ONGKIR {p_name_hook}!"],
-                        "Bukti Sosial": [f"🏆 {p_name_hook} BEST SELLER!", f"⭐ 4.9/5 rating!"],
-                        "Curiosity": [f"🤔 Kenapa semua pake {p_name_hook}?", f"😱 Gak nyangka {p_name_hook} sekeren ini!"],
-                        "Emosional": [f"🥺 Aku nangis lihat {p_name_hook}!", f"😍 Cinta pertama sama {p_name_hook}!"]
-                    }
-                    for h in hooks.get(gaya, []):
-                        st.markdown(f"- 🎬 {h}")
+                    st.markdown(f"- 🎬 😫 Capek cari {p_name_hook}? STOP!")
+                    st.markdown(f"- 🎬 🔥 DISKON 50% {p_name_hook}!")
             else:
                 st.warning("Masukkan nama produk.")
 
@@ -607,9 +591,9 @@ with tab4:
     if st.button("Generate Hashtag Viral", key="gen_hash"):
         with st.spinner("🧠 AI sedang membuat hashtag..."):
             if p_name_hash:
-                prompt = f"Buat 15 hashtag TikTok untuk '{p_name_hash}', niche {niche_hash}. Format: #fyp #viral #namaproduk #manfaat"
+                prompt = f"Buat 15 hashtag TikTok untuk '{p_name_hash}', niche {niche_hash}. Format: #fyp #viral #namaproduk"
                 res = call_gemini_api(prompt)
-                st.code(res if res else "#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon #murah #berkualitas #premium", language="text")
+                st.code(res if res else "#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon", language="text")
             else:
                 st.warning("Masukkan nama produk.")
 
