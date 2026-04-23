@@ -1,4 +1,24 @@
 import streamlit as st
+
+# 1. SELALU taruh set_page_config di baris pertama setelah import
+st.set_page_config(
+    page_title="Advertising Command Center",
+    layout="wide", # Membuat tampilan lebih luas ke samping
+    initial_sidebar_state="collapsed"
+)
+
+# 2. Masukkan kode CSS untuk menyembunyikan header di sini
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            .stAppDeployButton {display:none;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
+import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
