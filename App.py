@@ -5,23 +5,36 @@ from datetime import datetime, timedelta
 import hashlib
 import time
 
-# ==================== INISIALISASI GEMINI ====================
+# ==================== BACA API KEY DARI SECRETS ====================
 try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
-    st.warning("⚠️ Library Google Generative AI belum terinstall. Jalankan: pip install google-generativeai")
+    if "GEMINI_API_KEY" in st.secrets:
+        GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+        AI_AVAILABLE = True
+    else:
+        GEMINI_API_KEY = None
+        AI_AVAILABLE = False
+        st.warning("⚠️ API Key Gemini tidak ditemukan di Secrets. Fitur AI akan menggunakan template statis.")
+except Exception as e:
+    GEMINI_API_KEY = None
+    AI_AVAILABLE = False
+    st.warning(f"⚠️ Secrets tidak terbaca: {e}. Pastikan API Key sudah disimpan di dashboard Streamlit.")
 
-# Cek API Key
-if GEMINI_AVAILABLE and "GEMINI_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    AI_READY = True
+# ==================== INISIALISASI GEMINI ====================
+if AI_AVAILABLE:
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        st.success("✅ AI Gemini aktif! Generator akan menghasilkan konten AI.")
+    except ImportError:
+        AI_AVAILABLE = False
+        st.warning("⚠️ Library Google Generative AI belum terinstall. Jalankan: pip install google-generativeai")
+    except Exception as e:
+        AI_AVAILABLE = False
+        st.warning(f"⚠️ Gagal inisialisasi Gemini: {e}")
 else:
-    AI_READY = False
-    st.warning("⚠️ API Key Gemini tidak ditemukan. Fitur AI akan menggunakan template statis.")
-
+    st.warning("⚠️ AI tidak tersedia. Generator akan menggunakan template statis.")
+    
 # ==================== FUNGSI AI GENERATOR ====================
 def generate_with_ai(mode, jenis, produk, extra_info=""):
     """Generate konten dengan Gemini AI, fallback ke template jika error"""
