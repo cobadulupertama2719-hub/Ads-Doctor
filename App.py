@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import hashlib
+import requests
+import json
 
 # ==================== INISIALISASI SESSION STATE ====================
 if "authenticated" not in st.session_state:
@@ -31,28 +33,16 @@ DEMO_DURATION_MINUTES = 5
 MAX_DEMO_ANALYSIS = 2
 MAX_DEMO_GENERATOR = 2
 
-# ==================== GEMINI AI CONFIGURATION (HTTP Request) ====================
-import requests
-import json
-
+# ==================== GEMINI AI VIA HTTP REQUEST ====================
 GEMINI_AVAILABLE = False
 GEMINI_API_KEY = None
 
 try:
     GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
     if GEMINI_API_KEY and GEMINI_API_KEY != "":
-        # Test API dengan panggilan sederhana
-        test_url = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
-        test_response = requests.get(test_url)
-        if test_response.status_code == 200:
-            GEMINI_AVAILABLE = True
-            st.success("✅ AI Gemini aktif! (HTTP Mode)")
-        else:
-            st.warning("⚠️ API Key Gemini tidak valid")
-    else:
-        st.warning("⚠️ API Key Gemini tidak ditemukan di Secrets")
-except Exception as e:
-    st.warning(f"⚠️ Gagal inisialisasi Gemini: {e}")
+        GEMINI_AVAILABLE = True
+except:
+    pass
 
 def call_gemini_api(prompt):
     """Panggil Gemini API langsung via HTTP requests"""
@@ -73,8 +63,7 @@ def call_gemini_api(prompt):
         return None
     except Exception as e:
         return None
-    
-# ==================== FUNGSI AI GEMINI ====================
+
 def generate_ai_content(prompt, fallback_text=""):
     """Generate konten dengan Gemini AI via HTTP"""
     if not GEMINI_AVAILABLE:
@@ -86,70 +75,6 @@ def generate_ai_content(prompt, fallback_text=""):
         return fallback_text
     except:
         return fallback_text
-    try:
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return fallback_text
-
-def generate_ai_summary(ctr, roas_aktual, roas_bep, budget_terserap_persen, clicks, orders, platform):
-    """AI summary dari data analisis"""
-    if not GEMINI_AVAILABLE:
-        return None
-    prompt = f"""
-Anda adalah pakar iklan TikTok & Shopee. Berdasarkan data berikut, buat kesimpulan SINGKAT (maks 80 kata) + rekomendasi.
-
-Data:
-- CTR: {ctr:.1f}% (target minimal 2%)
-- ROAS Aktual: {roas_aktual:.1f}x
-- ROAS BEP: {roas_bep:.1f}x
-- Budget terserap: {budget_terserap_persen:.0f}%
-- Klik: {clicks}
-- Order: {orders}
-- Platform: {platform}
-
-Buat analisis: masalah utama? solusi? prioritas?
-Gunakan bahasa Indonesia yang profesional.
-"""
-    return generate_ai_content(prompt)
-
-def generate_visual_recommendation(produk, ctr):
-    """AI rekomendasi visual untuk CTR rendah"""
-    if not GEMINI_AVAILABLE:
-        return None
-    prompt = f"""
-Anda adalah desainer kreatif. Produk: {produk}. CTR saat ini: {ctr:.1f}% (di bawah standar 2%).
-
-Buat rekomendasi perbaikan visual:
-1. Saran warna background
-2. Saran hook untuk video (3 detik pertama)
-3. Contoh teks yang bisa ditempel di video/foto
-
-Output singkat, maks 100 kata, bahasa Indonesia.
-"""
-    return generate_ai_content(prompt)
-
-def generate_scale_prediction(roas_aktual, budget_set, roas_bep):
-    """AI prediksi performa jika scale"""
-    if not GEMINI_AVAILABLE:
-        return None
-    new_budget = budget_set * 1.3
-    prompt = f"""
-Prediksi jika naikkan budget 30%.
-
-Data saat ini:
-- ROAS: {roas_aktual:.1f}x
-- Budget: Rp{budget_set:,.0f}/hari
-- ROAS BEP: {roas_bep:.1f}x
-
-Jika naikkan budget menjadi Rp{new_budget:,.0f}/hari:
-1. Prediksi ROAS setelah scale
-2. Estimasi profit tambahan
-3. Level resiko (Rendah/Sedang/Tinggi)
-
-Output singkat, maks 80 kata, bahasa Indonesia.
-"""
-    return generate_ai_content(prompt)
 
 # ==================== FUNGSI DEMO ====================
 def get_device_fingerprint():
@@ -393,6 +318,28 @@ with st.sidebar:
                 st.warning("⚠️ Margin tipis, rawan boncos.")
             else:
                 st.success("✅ Produk layak iklan!")
+    
+    # ==================== TANYA JAWAB AI (CHATBOT) ====================
+    st.markdown("---")
+    with st.expander("💬 **Tanya AI (Konsultasi Iklan)**", expanded=False):
+        st.markdown("Tanya apa saja tentang iklan TikTok/Shopee")
+        user_question = st.text_input("Pertanyaan kamu:", placeholder="Contoh: ROAS saya turun drastis, harus gimana?", key="chatbot_question")
+        if st.button("🤖 Tanya AI", use_container_width=True, key="ask_ai"):
+            if user_question:
+                with st.spinner("AI sedang berpikir..."):
+                    prompt = f"""Anda adalah pakar iklan TikTok & Shopee. Jawab pertanyaan seller pemula ini dengan singkat (maks 100 kata) dan mudah dipahami.
+
+Pertanyaan: {user_question}
+
+Jawab dengan bahasa Indonesia yang ramah, profesional, dan berikan solusi praktis.
+"""
+                    answer = call_gemini_api(prompt)
+                    if answer:
+                        st.info(f"💡 {answer}")
+                    else:
+                        st.warning("Maaf, AI sedang sibuk. Coba lagi nanti.")
+            else:
+                st.warning("Masukkan pertanyaan dulu.")
 
 # ==================== DASHBOARD UTAMA ====================
 st.markdown("""
@@ -421,6 +368,7 @@ with colB:
     sales = st.number_input("💰 Omset (Rp)", min_value=0, value=600000, step=50000, key="sales")
     orders = st.number_input("📦 Jumlah Order", min_value=0, value=6, step=1, key="orders")
     platform = st.selectbox("📱 Platform", ["Shopee", "TikTok"], key="platform")
+    produk_name = st.text_input("🏷️ Nama Produk (opsional)", placeholder="Contoh: Kaos Oversize", key="produk_name_analisis")
 
 analize = st.button("🔍 Analisis Iklan", use_container_width=True, key="analize_btn")
 
@@ -466,26 +414,51 @@ if analize:
         status_bep = "✅ Aman" if roas_aktual >= roas_bep else "⚠️ Rugi"
         st.markdown(f"<div style='background:#1a1a2e; padding:1rem; border-radius:1rem; border-left:4px solid #00E5A0;'><p style='color:#888; margin:0'>ROAS BEP</p><h2 style='color:white; margin:0'>{roas_bep:.1f}x</h2><p style='color:#888; margin:0; font-size:0.7rem;'>{status_bep}</p></div>", unsafe_allow_html=True)
     
-    # ==================== AI SUMMARY (FITUR 2) ====================
+    # ==================== AI SUMMARY (KESIMPULAN OTOMATIS) ====================
+    if GEMINI_AVAILABLE:
+        st.markdown("---")
+        st.markdown("### 💡 **Kesimpulan AI**")
+        
+        with st.spinner("AI sedang merangkum..."):
+            summary_prompt = f"""Berdasarkan data iklan ini:
+- CTR: {ctr:.1f}%
+- ROAS: {roas_aktual:.1f}x
+- BEP: {roas_bep:.1f}x
+- Budget terserap: {budget_terserap_persen:.0f}%
+- Order: {orders} dari {clicks} klik
+
+Buat kesimpulan SINGKAT (maks 50 kata) dalam bahasa Indonesia. Sebutkan apakah iklan UNTUNG atau RUGI, dan apa yang harus dilakukan (scale/optimasi/stop). Gunakan bahasa yang ramah dan mudah dipahami seller pemula.
+"""
+            summary = call_gemini_api(summary_prompt)
+            if summary:
+                st.info(f"📌 {summary}")
+            else:
+                st.info("📌 Iklan perlu dievaluasi. Cek rekomendasi di bawah untuk langkah selanjutnya.")
+    
+    # ==================== AI PREDIKSI SCALE ====================
+    if GEMINI_AVAILABLE and roas_aktual >= roas_bep * 1.2 and budget_terserap_persen >= 85:
+        st.markdown("### 📈 **Prediksi jika Scale**")
+        
+        with st.spinner("AI menghitung prediksi profit..."):
+            new_budget = budget_set * 1.3
+            prediksi_prompt = f"""Prediksi jika naikkan budget 30% dari Rp{budget_set:,.0f} menjadi Rp{new_budget:,.0f}.
+ROAS saat ini: {roas_aktual:.1f}x, profit estimasi saat ini: Rp{profit_estimasi:,.0f}.
+
+Estimasi:
+1. ROAS setelah scale (kemungkinan)
+2. Estimasi profit baru per hari
+3. Level resiko (Rendah/Sedang/Tinggi)
+4. Tips agar scale berhasil
+
+Output singkat, maks 80 kata, bahasa Indonesia.
+"""
+            prediksi = call_gemini_api(prediksi_prompt)
+            if prediksi:
+                st.success(f"🔮 {prediksi}")
+    
+    # ==================== REKOMENDASI DASAR ====================
     st.markdown("---")
-    st.subheader("🤖 **AI Summary & Rekomendasi**")
-    
-    with st.spinner("AI sedang menganalisis data..."):
-        ai_summary = generate_ai_summary(ctr, roas_aktual, roas_bep, budget_terserap_persen, clicks, orders, platform)
-    
-    if ai_summary:
-        st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #667eea15, #764ba215); border-radius: 1rem; padding: 1rem; border: 1px solid #667eea30; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <span style="font-size: 20px;">🤖</span>
-                <span style="font-weight: 700; color: #667eea;">Gemini AI Insight</span>
-            </div>
-            <div style="color: #e2e8f0; line-height: 1.6;">{ai_summary.replace(chr(10), '<br>')}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # ==================== REKOMENDASI DASAR (TETAP ADA) ====================
-    st.markdown("### 🎯 **Kesimpulan & Rekomendasi**")
+    st.subheader("🎯 **Kesimpulan & Rekomendasi**")
     
     rekomendasi_tindakan = ""
     rekomendasi_roas = target_roas
@@ -586,42 +559,47 @@ if analize:
     </div>
     """, unsafe_allow_html=True)
     
-    # ==================== AI VISUAL RECOMMENDATION (FITUR 3) ====================
-    if ctr < 2 and clicks > 0:
-        st.markdown("### 🎨 **AI Rekomendasi Visual**")
-        with st.spinner("AI sedang memberikan saran visual..."):
-            produk_nama = next((p["nama"] for p in st.session_state.products if "nama" in p), "produk ini")
-            visual_ai = generate_visual_recommendation(produk_nama, ctr)
+    # ==================== REKOMENDASI BUDGET HARIAN ====================
+    if GEMINI_AVAILABLE and roas_aktual > 0:
+        st.markdown("---")
+        st.markdown("### 💰 **Rekomendasi Budget Besok**")
         
-        if visual_ai:
-            st.markdown(f"""
-            <div style="background: #fef3c7; border-radius: 1rem; padding: 1rem; border: 1px solid #f59e0b30; margin-bottom: 1rem;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="font-size: 20px;">🎨</span>
-                    <span style="font-weight: 700; color: #d97706;">Rekomendasi Visual AI</span>
-                </div>
-                <div style="color: #333; line-height: 1.6;">{visual_ai.replace(chr(10), '<br>')}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # ==================== AI SCALE PREDICTION (FITUR 4) ====================
-    if roas_aktual >= roas_bep and budget_terserap_persen >= 85:
-        st.markdown("### 📈 **AI Prediksi Scale**")
-        with st.spinner("AI menghitung prediksi performa..."):
-            scale_ai = generate_scale_prediction(roas_aktual, budget_set, roas_bep)
-        
-        if scale_ai:
-            st.markdown(f"""
-            <div style="background: #d1fae5; border-radius: 1rem; padding: 1rem; border: 1px solid #10b98130; margin-bottom: 1rem;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="font-size: 20px;">📊</span>
-                    <span style="font-weight: 700; color: #059669;">Prediksi Scale AI</span>
-                </div>
-                <div style="color: #333; line-height: 1.6;">{scale_ai.replace(chr(10), '<br>')}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        with st.spinner("AI menghitung budget optimal..."):
+            budget_prompt = f"""Berdasarkan data iklan hari ini:
+- Budget setting: Rp{budget_set:,.0f}
+- Budget terserap: {budget_terserap_persen:.0f}%
+- ROAS: {roas_aktual:.1f}x
+- BEP: {roas_bep:.1f}x
+- CTR: {ctr:.1f}%
 
-# ==================== GENERATOR (FITUR 1) ====================
+Beri saran budget untuk besok. Apakah naikkan, turunkan, atau tetap. Berikan angka spesifik dan alasannya singkat.
+
+Output maks 60 kata, bahasa Indonesia.
+"""
+            budget_rekom = call_gemini_api(budget_prompt)
+            if budget_rekom:
+                st.info(f"📌 {budget_rekom}")
+    
+    # ==================== PREDIKSI ROAS 7 HARI ====================
+    if GEMINI_AVAILABLE and roas_aktual > 0:
+        st.markdown("### 📈 **Prediksi Performa 7 Hari ke Depan**")
+        
+        with st.spinner("AI sedang menganalisis tren..."):
+            prediksi_prompt = f"""Berdasarkan data iklan saat ini:
+- ROAS: {roas_aktual:.1f}x
+- CTR: {ctr:.1f}%
+- Budget terserap: {budget_terserap_persen:.0f}%
+- BEP: {roas_bep:.1f}x
+
+Prediksi performa 7 hari ke depan jika setting dipertahankan. Sebutkan estimasi ROAS, apakah akan naik/turun, dan rekomendasi singkat.
+
+Output maks 80 kata, bahasa Indonesia.
+"""
+            prediksi_7 = call_gemini_api(prediksi_prompt)
+            if prediksi_7:
+                st.warning(f"🔮 {prediksi_7}")
+
+# ==================== GENERATOR ====================
 st.markdown("---")
 st.subheader("✨ Generator SEO & Deskripsi Produk")
 st.markdown("Pilih mode sesuai platform target kamu:")
@@ -637,7 +615,7 @@ def generator_access():
 
 mode_generator = st.radio("Pilih Mode:", ["🛍️ Mode Shopee (SEO Panjang)", "🎥 Mode TikTok (Viral & Emosional)"], horizontal=True, key="mode_generator")
 
-tab1, tab2, tab3 = st.tabs(["📝 SEO Title", "📄 Deskripsi Produk", "🎬 Hook Video TikTok"])
+tab1, tab2, tab3, tab4 = st.tabs(["📝 SEO Title", "📄 Deskripsi Produk", "🎬 Hook Video TikTok", "#️⃣ Hashtag Generator"])
 
 # Mode Shopee
 if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
@@ -652,22 +630,41 @@ if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
                 if not is_premium():
                     inc_demo_generator()
                 if prod_title:
-                    # Coba AI dulu
-                    ai_prompt = f"Buatkan 5 judul produk untuk '{prod_title}' di Shopee. Gunakan bahasa Indonesia menarik, tambahkan emoji, fokus pada manfaat. Keyword: {keyword1} {keyword2}"
-                    ai_result = generate_ai_content(ai_prompt, "")
-                    if ai_result and len(ai_result) > 50:
-                        for line in ai_result.strip().split('\n'):
-                            if line.strip():
-                                st.markdown(f"- {line.strip()}")
-                    else:
-                        # Fallback ke template
-                        titles = [
-                            f"🔥 {prod_title} {keyword1} - Bahan Adem & Premium",
-                            f"💯 {prod_title} BEST SELLER - Terjual 1000+ {keyword2}",
-                            f"✨ WAJIB PUNYA! {prod_title} {keyword1} Kualitas Terbaik"
-                        ]
-                        for t in titles:
-                            st.markdown(f"- {t}")
+                    with st.spinner("🤖 AI sedang menulis judul kreatif..."):
+                        if GEMINI_AVAILABLE:
+                            prompt = f"""Anda adalah copywriter ahli untuk e-commerce Shopee. Buatkan 5 JUDUL PRODUK yang SANGAT MENARIK untuk produk '{prod_title}'.
+
+RULES:
+1. Gunakan bahasa Indonesia yang HYPE
+2. WAJIB ada emoji: 🔥 💯 ✨ 🛒 ⭐ 🎯 💎
+3. Fokus MANFAAT produk
+4. Tambahkan power words: BEST SELLER, VIRAL, WAJIB PUNYA, LIMITED, PREMIUM
+5. Variasikan: promo, sosial, scarcity
+6. Gunakan keyword: {keyword1} {keyword2}
+
+Output: satu judul per baris, tanpa nomor.
+"""
+                            ai_result = call_gemini_api(prompt)
+                            if ai_result:
+                                for line in ai_result.strip().split('\n'):
+                                    if line.strip():
+                                        st.markdown(f"- {line.strip()}")
+                            else:
+                                titles = [
+                                    f"🔥 {prod_title} - Kualitas Premium",
+                                    f"💯 {prod_title} BEST SELLER",
+                                    f"✨ WAJIB PUNYA! {prod_title}"
+                                ]
+                                for t in titles:
+                                    st.markdown(f"- {t}")
+                        else:
+                            titles = [
+                                f"🔥 {prod_title} - Kualitas Premium",
+                                f"💯 {prod_title} BEST SELLER",
+                                f"✨ WAJIB PUNYA! {prod_title}"
+                            ]
+                            for t in titles:
+                                st.markdown(f"- {t}")
                 else:
                     st.warning("Masukkan nama produk.")
     
@@ -682,12 +679,14 @@ if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
                 if not is_premium():
                     inc_demo_generator()
                 if prod_desc:
-                    ai_prompt = f"Buatkan deskripsi produk untuk '{prod_desc}' di Shopee. Fokus pada manfaat: {manfaat}. Spesifikasi: {spesifikasi}. Gunakan emoji, bahasa persuasif."
-                    ai_result = generate_ai_content(ai_prompt, "")
-                    if ai_result and len(ai_result) > 50:
-                        st.code(ai_result, language="markdown")
-                    else:
-                        desc = f"""
+                    with st.spinner("🤖 AI sedang menulis deskripsi..."):
+                        if GEMINI_AVAILABLE:
+                            prompt = f"""Buatkan deskripsi produk untuk '{prod_desc}' di Shopee. Fokus pada manfaat: {manfaat}. Spesifikasi: {spesifikasi}. Gunakan emoji, bahasa persuasif, dan ajakan beli."""
+                            ai_result = call_gemini_api(prompt)
+                            if ai_result:
+                                st.code(ai_result, language="markdown")
+                            else:
+                                desc = f"""
 ✨ {prod_desc} - Kualitas Premium Harga Terjangkau!
 
 🔥 Kenapa Harus Pilih {prod_desc}?
@@ -697,13 +696,25 @@ if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
 ✅ Size Lengkap - S, M, L, XL, XXL
 ✅ Garansi 100% - Jika tidak sesuai, uang kembali!
 
-📏 Detail Produk:
-{spesifikasi if spesifikasi else 'Bahan: Premium Quality, Size Lengkap'}
+🛒 ORDER SEKARANG JUGA!
+🔥 Promo Terbatas! Free ongkir + Diskon 10%!
+"""
+                                st.code(desc, language="markdown")
+                        else:
+                            desc = f"""
+✨ {prod_desc} - Kualitas Premium Harga Terjangkau!
+
+🔥 Kenapa Harus Pilih {prod_desc}?
+
+✅ Bahan Berkualitas - {manfaat if manfaat else 'Menggunakan material terbaik'}
+✅ Desain Modern - Cocok untuk berbagai acara
+✅ Size Lengkap - S, M, L, XL, XXL
+✅ Garansi 100% - Jika tidak sesuai, uang kembali!
 
 🛒 ORDER SEKARANG JUGA!
 🔥 Promo Terbatas! Free ongkir + Diskon 10%!
 """
-                        st.code(desc, language="markdown")
+                            st.code(desc, language="markdown")
                 else:
                     st.warning("Masukkan nama produk.")
     
@@ -715,20 +726,30 @@ if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
                 if not is_premium():
                     inc_demo_generator()
                 if prod_hook:
-                    ai_prompt = f"Buatkan 5 hook video untuk produk '{prod_hook}' di Shopee. Hook adalah kalimat pembuka 3-5 detik. Fokus pada promo dan manfaat."
-                    ai_result = generate_ai_content(ai_prompt, "")
-                    if ai_result and len(ai_result) > 50:
-                        for line in ai_result.strip().split('\n'):
-                            if line.strip():
-                                st.markdown(f"- 🎬 {line.strip()}")
-                    else:
-                        hooks = [
-                            f"🛍️ {prod_hook} - Kualitas Premium Harga Terjangkau!",
-                            f"📦 {prod_hook} - FREE ONGKIR Se-Indonesia!",
-                            f"⭐ {prod_hook} - Rating 4.9/5, Yuk Cobain!"
-                        ]
-                        for h in hooks:
-                            st.markdown(f"- 🎬 {h}")
+                    with st.spinner("🤖 AI sedang membuat hook..."):
+                        if GEMINI_AVAILABLE:
+                            prompt = f"Buatkan 5 hook video untuk produk '{prod_hook}' di Shopee. Hook adalah kalimat pembuka 3-5 detik. Fokus pada promo dan manfaat."
+                            ai_result = call_gemini_api(prompt)
+                            if ai_result:
+                                for line in ai_result.strip().split('\n'):
+                                    if line.strip():
+                                        st.markdown(f"- 🎬 {line.strip()}")
+                            else:
+                                hooks = [
+                                    f"🛍️ {prod_hook} - Kualitas Premium Harga Terjangkau!",
+                                    f"📦 {prod_hook} - FREE ONGKIR Se-Indonesia!",
+                                    f"⭐ {prod_hook} - Rating 4.9/5, Yuk Cobain!"
+                                ]
+                                for h in hooks:
+                                    st.markdown(f"- 🎬 {h}")
+                        else:
+                            hooks = [
+                                f"🛍️ {prod_hook} - Kualitas Premium Harga Terjangkau!",
+                                f"📦 {prod_hook} - FREE ONGKIR Se-Indonesia!",
+                                f"⭐ {prod_hook} - Rating 4.9/5, Yuk Cobain!"
+                            ]
+                            for h in hooks:
+                                st.markdown(f"- 🎬 {h}")
                 else:
                     st.warning("Masukkan nama produk.")
 
@@ -744,20 +765,30 @@ else:
                 if not is_premium():
                     inc_demo_generator()
                 if prod_title:
-                    ai_prompt = f"Buatkan 5 judul VIRAL untuk produk '{prod_title}' di TikTok. Gunakan emoji, kata VIRAL/WAJIB PUNYA/STOP. Pain point: {pain_point}"
-                    ai_result = generate_ai_content(ai_prompt, "")
-                    if ai_result and len(ai_result) > 50:
-                        for line in ai_result.strip().split('\n'):
-                            if line.strip():
-                                st.markdown(f"- 🎥 {line.strip()}")
-                    else:
-                        titles = [
-                            f"😭 STOP! Jangan beli {prod_title} sebelum lihat ini!",
-                            f"🔥 VIRAL! {prod_title} yang lagi di mana-mana!",
-                            f"💯 WAJIB PUNYA! {prod_title} auto percaya diri!"
-                        ]
-                        for t in titles:
-                            st.markdown(f"- 🎥 {t}")
+                    with st.spinner("🤖 AI sedang menulis judul viral..."):
+                        if GEMINI_AVAILABLE:
+                            prompt = f"Buatkan 5 judul VIRAL untuk produk '{prod_title}' di TikTok. Gunakan emoji, kata VIRAL/WAJIB PUNYA/STOP. Pain point: {pain_point}"
+                            ai_result = call_gemini_api(prompt)
+                            if ai_result:
+                                for line in ai_result.strip().split('\n'):
+                                    if line.strip():
+                                        st.markdown(f"- 🎥 {line.strip()}")
+                            else:
+                                titles = [
+                                    f"😭 STOP! Jangan beli {prod_title} sebelum lihat ini!",
+                                    f"🔥 VIRAL! {prod_title} yang lagi di mana-mana!",
+                                    f"💯 WAJIB PUNYA! {prod_title} auto percaya diri!"
+                                ]
+                                for t in titles:
+                                    st.markdown(f"- 🎥 {t}")
+                        else:
+                            titles = [
+                                f"😭 STOP! Jangan beli {prod_title} sebelum lihat ini!",
+                                f"🔥 VIRAL! {prod_title} yang lagi di mana-mana!",
+                                f"💯 WAJIB PUNYA! {prod_title} auto percaya diri!"
+                            ]
+                            for t in titles:
+                                st.markdown(f"- 🎥 {t}")
                 else:
                     st.warning("Masukkan nama produk.")
     
@@ -771,12 +802,14 @@ else:
                 if not is_premium():
                     inc_demo_generator()
                 if prod_desc:
-                    ai_prompt = f"Buatkan deskripsi storytelling untuk produk '{prod_desc}' di TikTok. Gaya curhat. Cerita: {cerita}. Pakai emoji, hashtag #viral #fyp."
-                    ai_result = generate_ai_content(ai_prompt, "")
-                    if ai_result and len(ai_result) > 50:
-                        st.code(ai_result, language="markdown")
-                    else:
-                        desc = f"""
+                    with st.spinner("🤖 AI sedang menulis deskripsi..."):
+                        if GEMINI_AVAILABLE:
+                            prompt = f"Buatkan deskripsi storytelling untuk produk '{prod_desc}' di TikTok. Gaya curhat. Cerita: {cerita}. Pakai emoji, hashtag #viral #fyp."
+                            ai_result = call_gemini_api(prompt)
+                            if ai_result:
+                                st.code(ai_result, language="markdown")
+                            else:
+                                desc = f"""
 {cerita if cerita else 'Dulu aku selalu'}...
 TAPI setelah pake {prod_desc}, semuanya berubah! 😭
 
@@ -790,7 +823,23 @@ Klik link di bio sebelum kehabisan!
 
 #viral #fyp #rekomendasi
 """
-                        st.code(desc, language="markdown")
+                                st.code(desc, language="markdown")
+                        else:
+                            desc = f"""
+{cerita if cerita else 'Dulu aku selalu'}...
+TAPI setelah pake {prod_desc}, semuanya berubah! 😭
+
+✨ Kenapa {prod_desc} beda?
+✅ Bahan premium bikin nyaman seharian
+✅ Desain kekinian auto bikin percaya diri
+✅ Harga terjangkau, kualitas dijamin!
+
+🔥🔥🔥 PROMO TERBATAS! 🔥🔥🔥
+Klik link di bio sebelum kehabisan!
+
+#viral #fyp #rekomendasi
+"""
+                            st.code(desc, language="markdown")
                 else:
                     st.warning("Masukkan nama produk.")
     
@@ -804,30 +853,80 @@ Klik link di bio sebelum kehabisan!
                 if not is_premium():
                     inc_demo_generator()
                 if prod_hook:
-                    ai_prompt = f"Buatkan 5 hook viral untuk produk '{prod_hook}' di TikTok. Gaya: {hook_style}. Hook adalah 3 detik pertama yang bikin stop scroll."
-                    ai_result = generate_ai_content(ai_prompt, "")
-                    if ai_result and len(ai_result) > 50:
-                        for line in ai_result.strip().split('\n'):
-                            if line.strip():
-                                st.markdown(f"- 🎬 {line.strip()}")
-                    else:
-                        hooks = [
-                            f"😫 Capek cari {prod_hook} yang nyaman? STOP!",
-                            f"🔥 DISKON 50% {prod_hook} cuma hari ini!",
-                            f"🏆 {prod_hook} best seller dengan 5000+ review!"
-                        ]
-                        for h in hooks:
-                            st.markdown(f"- 🎬 {h}")
+                    with st.spinner("🤖 AI sedang membuat hook viral..."):
+                        if GEMINI_AVAILABLE:
+                            prompt = f"Buatkan 5 hook viral untuk produk '{prod_hook}' di TikTok. Gaya: {hook_style}. Hook adalah 3 detik pertama yang bikin stop scroll."
+                            ai_result = call_gemini_api(prompt)
+                            if ai_result:
+                                for line in ai_result.strip().split('\n'):
+                                    if line.strip():
+                                        st.markdown(f"- 🎬 {line.strip()}")
+                            else:
+                                if hook_style == "Problem Solver":
+                                    hooks = [f"😫 Capek cari {prod_hook} yang nyaman? STOP!", f"❌ Jangan beli {prod_hook} sebelum lihat video ini!"]
+                                elif hook_style == "Diskon":
+                                    hooks = [f"🔥 DISKON 50% {prod_hook} cuma hari ini!", f"🎉 FREE ONGKIR {prod_hook} se-Indonesia!"]
+                                elif hook_style == "Bukti Sosial":
+                                    hooks = [f"🏆 {prod_hook} best seller dengan 5000+ review!", f"⭐ 4.9/5 rating untuk {prod_hook}!"]
+                                elif hook_style == "Curiosity":
+                                    hooks = [f"🤔 Kenapa semua orang pake {prod_hook}?", f"😱 Gak nyangka {prod_hook} sekeren ini!"]
+                                else:
+                                    hooks = [f"🥺 Aku menangis lihat {prod_hook} ini!", f"😍 Cinta pertama sama {prod_hook}!"]
+                                for h in hooks:
+                                    st.markdown(f"- 🎬 {h}")
+                        else:
+                            if hook_style == "Problem Solver":
+                                hooks = [f"😫 Capek cari {prod_hook} yang nyaman? STOP!", f"❌ Jangan beli {prod_hook} sebelum lihat video ini!"]
+                            elif hook_style == "Diskon":
+                                hooks = [f"🔥 DISKON 50% {prod_hook} cuma hari ini!", f"🎉 FREE ONGKIR {prod_hook} se-Indonesia!"]
+                            elif hook_style == "Bukti Sosial":
+                                hooks = [f"🏆 {prod_hook} best seller dengan 5000+ review!", f"⭐ 4.9/5 rating untuk {prod_hook}!"]
+                            elif hook_style == "Curiosity":
+                                hooks = [f"🤔 Kenapa semua orang pake {prod_hook}?", f"😱 Gak nyangka {prod_hook} sekeren ini!"]
+                            else:
+                                hooks = [f"🥺 Aku menangis lihat {prod_hook} ini!", f"😍 Cinta pertama sama {prod_hook}!"]
+                            for h in hooks:
+                                st.markdown(f"- 🎬 {h}")
                 else:
                     st.warning("Masukkan nama produk.")
 
-# ==================== AI STATUS INDICATOR ====================
-if GEMINI_AVAILABLE:
-    st.markdown("""
-    <div style="background: #d1fae5; border-radius: 12px; padding: 0.5rem; margin-top: 1rem; text-align: center;">
-        <span style="font-size: 0.7rem; color: #059669;">🤖 AI Powered by Google Gemini — Hasil lebih kreatif & variatif</span>
-    </div>
-    """, unsafe_allow_html=True)
+# ==================== TAB 4: HASHTAG GENERATOR ====================
+with tab4:
+    st.markdown("### #️⃣ **Hashtag Generator TikTok**")
+    st.markdown("Generate hashtag viral untuk meningkatkan jangkauan")
+    
+    produk_hashtag = st.text_input("Nama Produk", key="hashtag_produk")
+    niche = st.selectbox("Niche / Kategori", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga", "Lainnya"], key="hashtag_niche")
+    
+    if st.button("✨ Generate Hashtag Viral", key="gen_hashtag"):
+        if generator_access():
+            if not is_premium():
+                inc_demo_generator()
+            if produk_hashtag:
+                with st.spinner("🤖 AI sedang membuat hashtag viral..."):
+                    if GEMINI_AVAILABLE:
+                        hashtag_prompt = f"""Buatkan 15 hashtag untuk produk '{produk_hashtag}' di TikTok.
+Niche: {niche}
+
+RULES:
+1. Format: #fyp #viral #rekomendasi #namaproduk #manfaat1 #manfaat2
+2. Campuran hashtag populer dan spesifik produk
+3. Gunakan bahasa Indonesia dan Inggris
+4. Jangan ada spasi, gunakan camelCase jika perlu
+
+Output: satu hashtag per baris, tanpa nomor.
+"""
+                        hashtag_result = call_gemini_api(hashtag_prompt)
+                        if hashtag_result:
+                            st.markdown("### 📋 Hashtag Siap Pakai:")
+                            st.code(hashtag_result, language="text")
+                            st.caption("💡 Tips: Copy semua hashtag, paste di caption video TikTok")
+                        else:
+                            st.code("#fyp #viral #rekomendasi #tokopedia #shopee #promo #diskon #murah #berkualitas #premium", language="text")
+                    else:
+                        st.code("#fyp #viral #rekomendasi #tokopedia #shopee #promo #diskon #murah #berkualitas #premium", language="text")
+            else:
+                st.warning("Masukkan nama produk dulu.")
 
 # ==================== FOOTER ====================
 st.markdown("---")
