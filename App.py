@@ -35,13 +35,19 @@ MAX_DEMO_GENERATOR = 2
 GEMINI_AVAILABLE = False
 try:
     import google.generativeai as genai
-    if "GEMINI_API_KEY" in st.secrets:
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    API_KEY = st.secrets.get("GEMINI_API_KEY", "")
+    if API_KEY and API_KEY != "":
+        genai.configure(api_key=API_KEY)
         model = genai.GenerativeModel('gemini-1.5-flash')
         GEMINI_AVAILABLE = True
-except:
-    pass
-
+        st.success("✅ AI Gemini aktif! Generator akan menghasilkan konten AI.")
+    else:
+        st.warning("⚠️ API Key Gemini tidak ditemukan. Fitur AI akan menggunakan template statis.")
+except ImportError:
+    st.warning("⚠️ Library Google Generative AI belum terinstall. Jalankan: pip install google-generativeai")
+except Exception as e:
+    st.warning(f"⚠️ Gagal inisialisasi Gemini: {e}")
+    
 # ==================== FUNGSI AI GEMINI ====================
 def generate_ai_content(prompt, fallback_text=""):
     """Generate konten dengan Gemini AI, fallback ke template jika error"""
