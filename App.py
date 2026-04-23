@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import hashlib
-import plotly.graph_objects as go
 
 # ==================== KONFIGURASI ====================
 ADMIN_USERNAME = "arkidigital"
@@ -295,7 +294,7 @@ if analize:
         warna_profit = "#00E5A0" if profit_estimasi > 0 else "#ff6b6b"
         st.markdown(f"<div style='background:#1a1a2e; padding:1rem; border-radius:1rem; border-left:4px solid #00E5A0;'><p style='color:#888; margin:0'>Estimasi Profit</p><h2 style='color:{warna_profit}; margin:0'>{format_rp(profit_estimasi)}</h2></div>", unsafe_allow_html=True)
     
-    # ==================== REKOMENDASI (DECISION TREE) ====================
+    # ==================== REKOMENDASI ====================
     st.markdown("---")
     st.subheader("🎯 **Kesimpulan & Rekomendasi**")
     
@@ -310,11 +309,11 @@ if analize:
         rekomendasi_tindakan = f"""
         🔴 **PRIORITAS 1 - HENTIKAN IKLAN SEGERA!**  
         📊 Data: {clicks} klik, budget terserap {budget_terserap_persen:.0f}%, tapi 0 order.  
-        **Penyebab:** Produk belum layak iklan (harga tidak bersaing, review minim, deskripsi lemah, atau demand rendah).  
+        **Penyebab:** Produk belum layak iklan.  
         **Yang harus dilakukan:**  
         1. Cek harga produk — apakah lebih murah atau setara kompetitor?  
         2. Tambah review & rating (minimal 10-20 review positif)  
-        3. Perbaiki deskripsi — fokus ke MANFAAT, bukan spesifikasi  
+        3. Perbaiki deskripsi — fokus ke MANFAAT  
         4. Pastikan stok aman dan produk dibutuhkan pasar  
         **Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**
         """
@@ -397,14 +396,6 @@ if analize:
         <p><strong>💰 Budget rekomendasi:</strong> {format_rp(rekomendasi_budget)} &nbsp;|&nbsp; <strong>🎯 Target ROAS rekomendasi:</strong> {rekomendasi_roas:.1f}x</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Grafik sederhana
-    st.markdown("---")
-    st.subheader("📈 Tren Performa")
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=[1,2,3], y=[roas_aktual*0.8, roas_aktual, roas_aktual*1.1], mode='lines+markers', name='ROAS'))
-    fig.update_layout(height=300, margin=dict(l=0,r=0,t=30,b=0), plot_bgcolor='#1a1a2e', paper_bgcolor='#1a1a2e', font_color='white')
-    st.plotly_chart(fig, use_container_width=True)
 
 # ==================== GENERATOR ====================
 st.markdown("---")
