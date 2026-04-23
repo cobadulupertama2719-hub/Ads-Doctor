@@ -21,7 +21,7 @@ if "demo_history" not in st.session_state:
     st.session_state["demo_history"] = {}
 
 # ==================== KONFIGURASI ====================
-ADMIN_USERNAME = "Arkidigital"
+ADMIN_USERNAME = "arkidigital"
 ADMIN_PASSWORD = "Arkidigital2026"
 
 # LINK CHECKOUT PAGE
@@ -393,4 +393,266 @@ if analize:
         rekomendasi_tindakan = f"""
         🟡 **PRIORITAS 2 - OPTIMASI**  
         ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (untung)  
-        Budget terserap {budget_terserap_persen:.0
+        Budget terserap {budget_terserap_persen:.0f}% (masih sisa)  
+        ✅ Turunkan target ROAS **0.5 poin** menjadi **{new_target:.1f}x**  
+        ✅ **JANGAN UBAH BUDGET** (tetap Rp{budget_set:,.0f})  
+        ⏰ Tunggu **3 hari** tanpa perubahan.
+        """
+        rekomendasi_roas = new_target
+        prioritas = "🟡 PRIORITAS 2 - OPTIMASI (Turun ROAS)"
+        warna = "warning"
+    
+    # ATURAN 4: IKLAN RUGI
+    elif roas_aktual < roas_bep and roas_aktual > 0:
+        new_target = roas_bep + 0.5
+        rekomendasi_tindakan = f"""
+        🔴 **PRIORITAS 3 - IKLAN RUGI**  
+        ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x  
+        ✅ Naikkan target ROAS **0.5 poin** menjadi **{new_target:.1f}x**  
+        ✅ **JANGAN UBAH BUDGET** (tetap Rp{budget_set:,.0f})  
+        ⏰ Tunggu **3 hari** tanpa perubahan.
+        """
+        rekomendasi_roas = new_target
+        prioritas = "🔴 PRIORITAS 3 - URGENT (Naik ROAS)"
+        warna = "danger"
+    
+    # ATURAN 5: PERFORMA SEHAT
+    elif roas_aktual >= roas_bep:
+        rekomendasi_tindakan = f"""
+        ✅ **PERFORMA SEHAT**  
+        ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x  
+        Budget terserap {budget_terserap_persen:.0f}%  
+        ✅ Pertahankan setting saat ini  
+        ⏰ Pantau 3-5 hari tanpa perubahan
+        """
+        prioritas = "🟢 PRIORITAS 5 - PANTAU"
+        warna = "info"
+    
+    # TAMBAHAN CTR RENDAH
+    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekomendasi_tindakan:
+        rekomendasi_tindakan += f"\n\n---\n📸 **CTR Rendah** ({ctr:.1f}% < 2%)\nSolusi: Ganti visual (foto/video hook). Buat 3 variasi kreatif baru."
+    
+    if rekomendasi_tindakan == "":
+        rekomendasi_tindakan = "⚠️ Data tidak mencukupi. Pastikan semua angka diisi dengan benar."
+        prioritas = "CEK DATA"
+        warna = "info"
+    
+    bg_color = {"danger":"#fee2e2", "warning":"#fef3c7", "success":"#d1fae5", "info":"#dbeafe"}.get(warna, "#f0f0ff")
+    border_color = {"danger":"#dc2626", "warning":"#f59e0b", "success":"#10b981", "info":"#3b82f6"}.get(warna, "#667eea")
+    
+    st.markdown(f"""
+    <div style="background:{bg_color}; border-radius:1rem; padding:1rem; border-left:5px solid {border_color}; margin:1rem 0;">
+        <h4 style="margin:0 0 0.5rem 0;">{prioritas}</h4>
+        <div style="color:#333;">{rekomendasi_tindakan.replace(chr(10), '<br>')}</div>
+        <hr>
+        <p><strong>💰 Budget rekomendasi:</strong> {format_rp(rekomendasi_budget)} &nbsp;|&nbsp; <strong>🎯 Target ROAS rekomendasi:</strong> {rekomendasi_roas:.1f}x</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ==================== GENERATOR ====================
+st.markdown("---")
+st.subheader("✨ Generator SEO & Deskripsi Produk")
+st.markdown("Pilih mode sesuai platform target kamu:")
+
+def generator_access():
+    if is_premium():
+        return True
+    if can_do_demo_generator():
+        return True
+    st.warning("⚠️ Demo hanya 2x generate. Beli premium untuk unlimited!")
+    st.markdown(f'<a href="{CHECKOUT_LINK}" target="_blank" style="display:block; background:#00E5A0; color:#1a1a2e; text-align:center; padding:12px; border-radius:40px; text-decoration:none;">💎 Beli Premium</a>', unsafe_allow_html=True)
+    return False
+
+mode_generator = st.radio("Pilih Mode:", ["🛍️ Mode Shopee (SEO Panjang)", "🎥 Mode TikTok (Viral & Emosional)"], horizontal=True, key="mode_generator")
+
+tab1, tab2, tab3 = st.tabs(["📝 SEO Title", "📄 Deskripsi Produk", "🎬 Hook Video TikTok"])
+
+# Mode Shopee
+if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
+    with tab1:
+        st.markdown("### 🔍 **Mode Shopee - SEO Title**")
+        prod_title = st.text_input("Nama Produk", key="seo_shopee_title")
+        keyword1 = st.text_input("Keyword Utama", placeholder="Contoh: kaos oversize pria", key="kw1_shopee")
+        keyword2 = st.text_input("Keyword Tambahan", placeholder="Contoh: bahan adem, kualitas premium", key="kw2_shopee")
+        
+        if st.button("✨ Generate Judul SEO (Shopee)", key="gen_seo_shopee"):
+            if generator_access():
+                if not is_premium():
+                    inc_demo_generator()
+                if prod_title:
+                    titles = [
+                        f"🔥 {prod_title} {keyword1} - Bahan Adem & Premium",
+                        f"💯 {prod_title} BEST SELLER - Terjual 1000+ {keyword2}",
+                        f"✨ WAJIB PUNYA! {prod_title} {keyword1} Kualitas Terbaik",
+                        f"🎯 {prod_title} {keyword2} - Dijamin Nyaman Dipakai",
+                        f"💎 {prod_title} PREMIUM QUALITY - Limited Stock!",
+                        f"🛒 {prod_title} - 50% OFF Hari Ini! Buruan {keyword1}",
+                        f"⭐ {prod_title} - Review 4.9/5, Cobain Sendiri!"
+                    ]
+                    for t in titles:
+                        st.markdown(f"- {t}")
+                else:
+                    st.warning("Masukkan nama produk.")
+    
+    with tab2:
+        st.markdown("### 📄 **Mode Shopee - Deskripsi Produk**")
+        prod_desc = st.text_input("Nama Produk", key="desc_shopee_prod")
+        manfaat = st.text_area("Manfaat Produk", placeholder="Contoh: adem, nyaman, tidak panas", key="manfaat_shopee")
+        spesifikasi = st.text_area("Spesifikasi", placeholder="Contoh: Bahan Cotton Combed 30s, Size S-XXL", key="spesifikasi_shopee")
+        
+        if st.button("✨ Generate Deskripsi (Shopee)", key="gen_desc_shopee"):
+            if generator_access():
+                if not is_premium():
+                    inc_demo_generator()
+                if prod_desc:
+                    desc = f"""
+✨ {prod_desc} - Kualitas Premium Harga Terjangkau!
+
+🔥 Kenapa Harus Pilih {prod_desc}?
+
+✅ Bahan Berkualitas - {manfaat if manfaat else 'Menggunakan material terbaik'}
+✅ Desain Modern - Cocok untuk berbagai acara
+✅ Size Lengkap - S, M, L, XL, XXL
+✅ Garansi 100% - Jika tidak sesuai, uang kembali!
+
+📏 Detail Produk:
+{spesifikasi if spesifikasi else 'Bahan: Premium Quality, Size Lengkap'}
+
+🛒 ORDER SEKARANG JUGA!
+🔥 Promo Terbatas! Free ongkir + Diskon 10%!
+"""
+                    st.code(desc, language="markdown")
+                else:
+                    st.warning("Masukkan nama produk.")
+    
+    with tab3:
+        st.markdown("### 🎬 **Mode Shopee - Hook Video**")
+        prod_hook = st.text_input("Nama Produk", key="hook_shopee_prod")
+        if st.button("✨ Generate Hook (Shopee)", key="gen_hook_shopee"):
+            if generator_access():
+                if not is_premium():
+                    inc_demo_generator()
+                if prod_hook:
+                    hooks = [
+                        f"🛍️ {prod_hook} - Kualitas Premium Harga Terjangkau!",
+                        f"📦 {prod_hook} - FREE ONGKIR Se-Indonesia!",
+                        f"⭐ {prod_hook} - Rating 4.9/5, Yuk Cobain!",
+                        f"🔥 {prod_hook} - Diskon 50% Cuma Hari Ini!"
+                    ]
+                    for h in hooks:
+                        st.markdown(f"- 🎬 {h}")
+                else:
+                    st.warning("Masukkan nama produk.")
+
+# Mode TikTok
+else:
+    with tab1:
+        st.markdown("### 🎥 **Mode TikTok - Viral Title**")
+        prod_title = st.text_input("Nama Produk", key="seo_tiktok_title")
+        pain_point = st.text_input("Pain Point Customer", placeholder="Contoh: celana kekecitan, bahan panas", key="pain_tiktok")
+        
+        if st.button("✨ Generate Judul Viral (TikTok)", key="gen_seo_tiktok"):
+            if generator_access():
+                if not is_premium():
+                    inc_demo_generator()
+                if prod_title:
+                    titles = [
+                        f"😭 STOP! Jangan beli {prod_title} sebelum lihat ini!",
+                        f"🔥 VIRAL! {prod_title} yang lagi di mana-mana!",
+                        f"💯 WAJIB PUNYA! {prod_title} auto percaya diri!",
+                        f"✨ {prod_title} yang bikin kamu auto glowing!",
+                        f"🤯 {prod_title} ini SOLUSI buat kamu yang {pain_point if pain_point else 'punya masalah'}!",
+                        f"🏆 {prod_title} BEST SELLER - 5000+ review 5 bintang!",
+                        f"💗 {prod_title} yang bikin kamu jatuh cinta!"
+                    ]
+                    for t in titles:
+                        st.markdown(f"- 🎥 {t}")
+                else:
+                    st.warning("Masukkan nama produk.")
+    
+    with tab2:
+        st.markdown("### 📄 **Mode TikTok - Deskripsi Emosional**")
+        prod_desc = st.text_input("Nama Produk", key="desc_tiktok_prod")
+        cerita = st.text_area("Cerita / Manfaat", placeholder="Contoh: Dulu aku gak percaya diri...", key="cerita_tiktok")
+        
+        if st.button("✨ Generate Deskripsi Emosional (TikTok)", key="gen_desc_tiktok"):
+            if generator_access():
+                if not is_premium():
+                    inc_demo_generator()
+                if prod_desc:
+                    desc = f"""
+{cerita if cerita else 'Dulu aku selalu'}...
+TAPI setelah pake {prod_desc}, semuanya berubah! 😭
+
+✨ Kenapa {prod_desc} beda?
+✅ Bahan premium bikin nyaman seharian
+✅ Desain kekinian auto bikin percaya diri
+✅ Harga terjangkau, kualitas dijamin!
+
+💬 Testimoni:
+⭐ "Gak nyangka seenak ini! Auto repeat order!" - @user1
+⭐ "Langsung viral di kantor! Banyak yang nanya!" - @user2
+
+🔥🔥🔥 PROMO TERBATAS! 🔥🔥🔥
+Klik link di bio sebelum kehabisan!
+
+#viral #fyp #rekomendasi #{prod_desc.replace(' ', '')}
+"""
+                    st.code(desc, language="markdown")
+                else:
+                    st.warning("Masukkan nama produk.")
+    
+    with tab3:
+        st.markdown("### 🎬 **Mode TikTok - Hook Video**")
+        prod_hook = st.text_input("Nama Produk", key="hook_tiktok_prod")
+        hook_style = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="hook_style_tiktok")
+        
+        if st.button("✨ Generate Hook Viral (TikTok)", key="gen_hook_tiktok"):
+            if generator_access():
+                if not is_premium():
+                    inc_demo_generator()
+                if prod_hook:
+                    if hook_style == "Problem Solver":
+                        hooks = [
+                            f"😫 Capek cari {prod_hook} yang nyaman? STOP!",
+                            f"❌ Jangan beli {prod_hook} sebelum lihat video ini!",
+                            f"🤯 Rahasia {prod_hook} yang gak pernah kamu tahu!",
+                            f"⚠️ 5 kesalahan fatal pas beli {prod_hook}!"
+                        ]
+                    elif hook_style == "Diskon":
+                        hooks = [
+                            f"🔥 DISKON 50% {prod_hook} cuma hari ini!",
+                            f"🎉 FREE ONGKIR {prod_hook} se-Indonesia!",
+                            f"💰 Harga {prod_hook} turun drastis! Buruan!"
+                        ]
+                    elif hook_style == "Bukti Sosial":
+                        hooks = [
+                            f"🏆 {prod_hook} best seller dengan 5000+ review!",
+                            f"⭐ 4.9/5 rating untuk {prod_hook}! Cobain sendiri!",
+                            f"📦 1000+ orang udah beli {prod_hook} minggu ini!"
+                        ]
+                    elif hook_style == "Curiosity":
+                        hooks = [
+                            f"🤔 Kenapa semua orang pake {prod_hook}?",
+                            f"😱 Gak nyangka {prod_hook} sekeren ini!",
+                            f"🫣 Psst... rahasia {prod_hook} akhirnya kebongkar!"
+                        ]
+                    else:
+                        hooks = [
+                            f"🥺 Aku menangis lihat {prod_hook} ini!",
+                            f"😍 Cinta pertama sama {prod_hook}!",
+                            f"💗 {prod_hook} yang bikin aku percaya diri!"
+                        ]
+                    for h in hooks:
+                        st.markdown(f"- 🎬 {h}")
+                else:
+                    st.warning("Masukkan nama produk.")
+
+# ==================== FOOTER ====================
+st.markdown("---")
+st.markdown("""
+<div style="text-align:center; font-size:12px; color:#888;">
+    <p>🩺 DOCTOR ADS SHOPEE & TIKTOK PREMIUM</p>
+    <p>© 2024 Arkidigital - Solusi Digital Marketing Terbaik</p>
+</div>
+""", unsafe_allow_html=True)
