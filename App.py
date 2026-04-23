@@ -3,14 +3,12 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import hashlib
-import json
 import plotly.graph_objects as go
 
 # ==================== KONFIGURASI ====================
 ADMIN_USERNAME = "arkidigital"
 ADMIN_PASSWORD = "Arkidigital2026"
-WA_NUMBER = "6288228878258"
-WA_LINK = f"https://wa.me/{WA_NUMBER}?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Doctor%20Ads%20Premium%20Rp147rb"
+WA_LINK = "https://wa.me/6288228878258?text=Halo%20Arkidigital%2C%20saya%20mau%20beli%20Doctor%20Ads%20Premium%20Rp147rb"
 
 DEMO_DURATION_MINUTES = 5
 MAX_DEMO_ANALYSIS = 2
@@ -45,8 +43,8 @@ def record_demo_start(fingerprint):
 def start_demo():
     fingerprint = get_device_fingerprint()
     if not can_start_demo(fingerprint):
-        st.error("⚠️ Anda sudah pernah mencoba demo! Demo hanya 1x per 24 jam.")
-        st.markdown(f'<a href="{WA_LINK}" target="_blank"><button style="background:#25D366; color:white; padding:10px; border-radius:30px; border:none; width:100%;">💬 Beli Premium via WA</button></a>', unsafe_allow_html=True)
+        st.error("⚠️ Demo hanya 1x per 24 jam!")
+        st.markdown(f'<a href="{WA_LINK}" target="_blank"><button style="background:#25D366; color:white; padding:10px; border-radius:30px; border:none; width:100%;">💬 Beli Premium</button></a>', unsafe_allow_html=True)
         return False
     record_demo_start(fingerprint)
     st.session_state["demo_mode"] = True
@@ -141,20 +139,6 @@ def delete_product(nama):
     products = load_products()
     st.session_state.products = [p for p in products if p["nama"] != nama]
 
-# ==================== CUSTOM CSS ====================
-st.markdown("""
-<style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background: #5B2C8F; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; }
-    .main-header { background: linear-gradient(135deg, #5B2C8F, #4a1d7a); padding: 1rem; border-radius: 1rem; color: white; margin-bottom: 1rem; }
-    .metric-card { background: #1a1a2e; padding: 1rem; border-radius: 1rem; border-left: 4px solid #00E5A0; }
-    .btn-primary { background: #00E5A0; color: #1a1a2e; padding: 0.7rem; border-radius: 2rem; text-align: center; font-weight: bold; text-decoration: none; display: block; margin: 0.5rem 0; }
-    .btn-secondary { background: rgba(255,255,255,0.1); color: white; padding: 0.7rem; border-radius: 2rem; text-align: center; text-decoration: none; display: block; margin: 0.5rem 0; }
-    .premium-badge { background: #00E5A0; color: #1a1a2e; padding: 0.2rem 0.6rem; border-radius: 2rem; font-size: 0.7rem; }
-    .demo-warning { background: #fef3c7; color: #d97706; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-</style>
-""", unsafe_allow_html=True)
-
 # ==================== PAGE CONFIG ====================
 st.set_page_config(page_title="Doctor Ads Premium", page_icon="🩺", layout="wide")
 
@@ -165,7 +149,7 @@ if not is_premium() and not st.session_state.get("demo_mode", False):
 
 if is_demo_expired():
     st.warning("⏰ Demo habis! Beli premium untuk akses penuh.")
-    st.markdown(f'<a href="{WA_LINK}" target="_blank" class="btn-primary">💎 Beli Premium Rp147rb</a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{WA_LINK}" target="_blank" style="display:block; background:#00E5A0; color:#1a1a2e; text-align:center; padding:12px; border-radius:40px; text-decoration:none;">💎 Beli Premium Rp147rb</a>', unsafe_allow_html=True)
     st.stop()
 
 # ==================== SIDEBAR ====================
@@ -228,11 +212,10 @@ with st.sidebar:
         roas_bep = harga_jual / laba_kotor if laba_kotor > 0 else 999
         st.caption("💎 Beli premium untuk simpan produk")
     
-    # Cek kelayakan produk (flowchart)
     with st.expander("📋 **Cek Kelayakan Produk**"):
         pernah = st.radio("Produk pernah laku?", ["Ya","Tidak"], horizontal=True)
         if pernah == "Tidak":
-            st.error("❌ Jangan iklan dulu! Risiko tinggi.")
+            st.error("❌ Jangan iklan dulu!")
         else:
             terjual = st.number_input("Terjual/bulan", 0, 100000, 500)
             if terjual < 1000:
@@ -255,20 +238,12 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Metric cards (akan diisi setelah analisis)
-st.markdown("### 📊 Dashboard Performa")
-col1, col2, col3, col4 = st.columns(4)
-for c in [col1, col2, col3, col4]:
-    c.markdown("<div class='metric-card'><p style='color:#888; margin:0'>-</p><h2 style='color:white; margin:0'>0</h2></div>", unsafe_allow_html=True)
-
 # ==================== INPUT DATA IKLAN ====================
-st.markdown("---")
 st.markdown("### 📝 Input Data Iklan")
 
-# Cek limit analisis demo
 if not is_premium() and not can_do_demo_analysis():
     st.warning(f"⚠️ Demo terbatas {MAX_DEMO_ANALYSIS}x analisis. Beli premium untuk unlimited!")
-    st.markdown(f'<a href="{WA_LINK}" target="_blank" class="btn-primary">💎 Beli Premium</a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{WA_LINK}" target="_blank" style="display:block; background:#00E5A0; color:#1a1a2e; text-align:center; padding:12px; border-radius:40px; text-decoration:none;">💎 Beli Premium</a>', unsafe_allow_html=True)
     st.stop()
 
 colA, colB = st.columns(2)
@@ -285,7 +260,7 @@ with colB:
 
 analize = st.button("🔍 Analisis Iklan", use_container_width=True)
 
-# ==================== ANALISIS ====================
+# ==================== ANALISIS & REKOMENDASI ====================
 if analize:
     if not is_premium():
         inc_demo_analysis()
@@ -297,9 +272,8 @@ if analize:
         roas_aktual = sales / budget_spent if budget_spent > 0 else 0
         budget_terserap_persen = (budget_spent / budget_set * 100) if budget_set > 0 else 0
         profit_estimasi = (laba_kotor * orders) - budget_spent if orders > 0 else -budget_spent
-        status_profit = "UNTUNG" if profit_estimasi > 0 else "RUGI"
     else:
-        ctr = 0; cpc = 0; roas_aktual = 0; budget_terserap_persen = 0; profit_estimasi = -budget_spent; status_profit = "RUGI"
+        ctr = 0; cpc = 0; roas_aktual = 0; budget_terserap_persen = 0; profit_estimasi = -budget_spent
     
     def format_rp(angka):
         if angka >= 1_000_000:
@@ -308,186 +282,179 @@ if analize:
             return f"Rp{angka/1000:.0f}RB"
         return f"Rp{angka:,.0f}"
     
-    # Update metric cards dengan data real
+    # Metric cards
     st.markdown("### 📊 Dashboard Performa")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(f"<div class='metric-card'><p style='color:#888; margin:0'>Total Belanja</p><h2 style='color:white; margin:0'>{format_rp(budget_spent)}</h2></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#1a1a2e; padding:1rem; border-radius:1rem; border-left:4px solid #00E5A0;'><p style='color:#888; margin:0'>Total Belanja</p><h2 style='color:white; margin:0'>{format_rp(budget_spent)}</h2></div>", unsafe_allow_html=True)
     with col2:
-        st.markdown(f"<div class='metric-card'><p style='color:#888; margin:0'>Total Omset</p><h2 style='color:white; margin:0'>{format_rp(sales)}</h2></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#1a1a2e; padding:1rem; border-radius:1rem; border-left:4px solid #00E5A0;'><p style='color:#888; margin:0'>Total Omset</p><h2 style='color:white; margin:0'>{format_rp(sales)}</h2></div>", unsafe_allow_html=True)
     with col3:
-        st.markdown(f"<div class='metric-card'><p style='color:#888; margin:0'>ROAS Aktual</p><h2 style='color:white; margin:0'>{roas_aktual:.1f}x</h2></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#1a1a2e; padding:1rem; border-radius:1rem; border-left:4px solid #00E5A0;'><p style='color:#888; margin:0'>ROAS Aktual</p><h2 style='color:white; margin:0'>{roas_aktual:.1f}x</h2></div>", unsafe_allow_html=True)
     with col4:
         warna_profit = "#00E5A0" if profit_estimasi > 0 else "#ff6b6b"
-        st.markdown(f"<div class='metric-card'><p style='color:#888; margin:0'>Estimasi Profit</p><h2 style='color:{warna_profit}; margin:0'>{format_rp(profit_estimasi)}</h2></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#1a1a2e; padding:1rem; border-radius:1rem; border-left:4px solid #00E5A0;'><p style='color:#888; margin:0'>Estimasi Profit</p><h2 style='color:{warna_profit}; margin:0'>{format_rp(profit_estimasi)}</h2></div>", unsafe_allow_html=True)
     
-    # ==================== REKOMENDASI DECISION TREE ====================
+    # ==================== REKOMENDASI (DECISION TREE) ====================
     st.markdown("---")
-    st.subheader("🎯 Kesimpulan & Rekomendasi")
+    st.subheader("🎯 **Kesimpulan & Rekomendasi**")
     
-    rekom_txt = ""
-    rekom_roas = target_roas
-    rekom_budget = budget_set
+    rekomendasi_tindakan = ""
+    rekomendasi_roas = target_roas
+    rekomendasi_budget = budget_set
     prioritas = ""
     warna = "info"
     
-    # Aturan 3: klik >50, budget terserap >80%, order=0 -> stop iklan
+    # ATURAN 1: KLIK BANYAK, BUDGET HABIS, ORDER 0 → STOP IKLAN
     if clicks > 50 and budget_terserap_persen >= 80 and orders == 0:
-        rekom_txt = f"""
-        🔴 **PRIORITAS 1 - HENTIKAN IKLAN!**  
-        Data: {clicks} klik, budget terserap {budget_terserap_persen:.0f}%, 0 order.  
-        **Produk belum layak iklan.**  
-        **Langkah:**  
-        1. Perbaiki produk (harga, review, deskripsi)  
-        2. Setelah siap, restart iklan dengan budget kecil (Rp50-100rb)  
-        **JANGAN lanjutkan iklan sebelum produk siap!**  
+        rekomendasi_tindakan = f"""
+        🔴 **PRIORITAS 1 - HENTIKAN IKLAN SEGERA!**  
+        📊 Data: {clicks} klik, budget terserap {budget_terserap_persen:.0f}%, tapi 0 order.  
+        **Penyebab:** Produk belum layak iklan (harga tidak bersaing, review minim, deskripsi lemah, atau demand rendah).  
+        **Yang harus dilakukan:**  
+        1. Cek harga produk — apakah lebih murah atau setara kompetitor?  
+        2. Tambah review & rating (minimal 10-20 review positif)  
+        3. Perbaiki deskripsi — fokus ke MANFAAT, bukan spesifikasi  
+        4. Pastikan stok aman dan produk dibutuhkan pasar  
+        **Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**
         """
         prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
     
-    # Scale hanya naikkan budget, ROAS tetap
+    # ATURAN 2: SIAP SCALE (naikkan budget 30%, ROAS tetap)
     elif budget_terserap_persen >= 85 and roas_aktual >= roas_bep * 1.2:
         new_budget = budget_set * 1.3
-        rekom_txt = f"""
+        rekomendasi_tindakan = f"""
         🟢 **PRIORITAS 4 - SIAP SCALE**  
         ROAS {roas_aktual:.1f}x > BEP {roas_bep:.1f}x (untung)  
         Budget terserap {budget_terserap_persen:.0f}% (hampir habis)  
         ✅ Naikkan **BUDGET 30%** menjadi Rp{new_budget:,.0f}  
         ✅ **PERTAHANKAN** target ROAS di {target_roas:.1f}x  
-        ⏰ Tunggu **3 hari** tanpa perubahan.  
+        ⏰ Tunggu **3 hari** tanpa perubahan apapun.
         """
-        rekom_budget = new_budget
-        prioritas = "🟢 PRIORITAS 4 - SCALE (Naik Budget)"
+        rekomendasi_budget = new_budget
+        prioritas = "🟢 PRIORITAS 4 - SCALE (Naik Budget 30%)"
         warna = "success"
     
-    # ROAS profit, budget belum habis -> turunkan ROAS
+    # ATURAN 3: ROAS PROFIT, BUDGET BELUM HABIS → TURUNKAN ROAS
     elif roas_aktual >= roas_bep and budget_terserap_persen < 85:
         new_target = target_roas - 0.5
-        rekom_txt = f"""
-        🟡 **PRIORITAS 2 - OPTIMASI (Turunkan ROAS)**  
-        ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x  
+        rekomendasi_tindakan = f"""
+        🟡 **PRIORITAS 2 - OPTIMASI**  
+        ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (untung)  
         Budget terserap {budget_terserap_persen:.0f}% (masih sisa)  
-        ✅ Turunkan target ROAS **0.5 poin** menjadi {new_target:.1f}x  
-        ✅ **JANGAN UBAH BUDGET** (Rp{budget_set:,.0f})  
-        ⏰ Tunggu **3 hari** tanpa perubahan.  
+        ✅ Turunkan target ROAS **0.5 poin** menjadi **{new_target:.1f}x**  
+        ✅ **JANGAN UBAH BUDGET** (tetap Rp{budget_set:,.0f})  
+        ⏰ Tunggu **3 hari** tanpa perubahan.
         """
-        rekom_roas = new_target
+        rekomendasi_roas = new_target
         prioritas = "🟡 PRIORITAS 2 - OPTIMASI (Turun ROAS)"
         warna = "warning"
     
-    # Iklan rugi -> naikkan ROAS
+    # ATURAN 4: IKLAN RUGI → NAIKKAN ROAS
     elif roas_aktual < roas_bep and roas_aktual > 0:
         new_target = roas_bep + 0.5
-        rekom_txt = f"""
+        rekomendasi_tindakan = f"""
         🔴 **PRIORITAS 3 - IKLAN RUGI**  
         ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x  
-        ✅ Naikkan target ROAS **0.5 poin** menjadi {new_target:.1f}x  
-        ✅ **JANGAN UBAH BUDGET** (Rp{budget_set:,.0f})  
-        ⏰ Tunggu **3 hari** tanpa perubahan.  
-        Jika masih rugi, pertimbangkan stop iklan sementara.
+        ✅ Naikkan target ROAS **0.5 poin** menjadi **{new_target:.1f}x**  
+        ✅ **JANGAN UBAH BUDGET** (tetap Rp{budget_set:,.0f})  
+        ⏰ Tunggu **3 hari** tanpa perubahan.
         """
-        rekom_roas = new_target
+        rekomendasi_roas = new_target
         prioritas = "🔴 PRIORITAS 3 - URGENT (Naik ROAS)"
         warna = "danger"
     
-    # Performa sehat
-    else:
-        rekom_txt = f"""
+    # ATURAN 5: PERFORMA SEHAT
+    elif roas_aktual >= roas_bep:
+        rekomendasi_tindakan = f"""
         ✅ **PERFORMA SEHAT**  
         ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x  
         Budget terserap {budget_terserap_persen:.0f}%  
-        Pertahankan setting saat ini.  
-        Pantau 3-5 hari. Jika konsisten dan budget habis, scale naikkan budget 30%.
+        ✅ Pertahankan setting saat ini  
+        ⏰ Pantau 3-5 hari tanpa perubahan
         """
         prioritas = "🟢 PRIORITAS 5 - PANTAU"
         warna = "info"
     
-    # Tambahan jika CTR rendah
-    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_txt:
-        rekom_txt += f"\n\n---\n📸 **CTR Rendah** ({ctr:.1f}% < 2%)\nSolusi: Ganti visual (foto/video hook). Buat 3 variasi kreatif baru."
+    # TAMBAHAN CTR RENDAH
+    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekomendasi_tindakan:
+        rekomendasi_tindakan += f"\n\n---\n📸 **CTR Rendah** ({ctr:.1f}% < 2%)\nSolusi: Ganti visual (foto/video hook). Buat 3 variasi kreatif baru."
     
-    bg = {"danger":"#fee2e2", "warning":"#fef3c7", "success":"#d1fae5", "info":"#dbeafe"}.get(warna, "#f0f0ff")
-    border = {"danger":"#dc2626", "warning":"#f59e0b", "success":"#10b981", "info":"#3b82f6"}.get(warna, "#667eea")
+    if rekomendasi_tindakan == "":
+        rekomendasi_tindakan = "⚠️ Data tidak mencukupi. Pastikan semua angka diisi dengan benar."
+        prioritas = "CEK DATA"
+        warna = "info"
+    
+    bg_color = {"danger":"#fee2e2", "warning":"#fef3c7", "success":"#d1fae5", "info":"#dbeafe"}.get(warna, "#f0f0ff")
+    border_color = {"danger":"#dc2626", "warning":"#f59e0b", "success":"#10b981", "info":"#3b82f6"}.get(warna, "#667eea")
+    
     st.markdown(f"""
-    <div style="background:{bg}; border-radius:1rem; padding:1rem; border-left:5px solid {border}; margin:1rem 0;">
+    <div style="background:{bg_color}; border-radius:1rem; padding:1rem; border-left:5px solid {border_color}; margin:1rem 0;">
         <h4 style="margin:0 0 0.5rem 0;">{prioritas}</h4>
-        <div style="color:#333;">{rekom_txt.replace(chr(10), '<br>')}</div>
+        <div style="color:#333;">{rekomendasi_tindakan.replace(chr(10), '<br>')}</div>
         <hr>
-        <p><strong>💰 Budget rekomendasi:</strong> {format_rp(rekom_budget)} &nbsp;|&nbsp; <strong>🎯 Target ROAS rekomendasi:</strong> {rekom_roas:.1f}x</p>
+        <p><strong>💰 Budget rekomendasi:</strong> {format_rp(rekomendasi_budget)} &nbsp;|&nbsp; <strong>🎯 Target ROAS rekomendasi:</strong> {rekomendasi_roas:.1f}x</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Grafik sederhana (placeholder)
+    # Grafik sederhana
     st.markdown("---")
-    st.subheader("📈 Tren Performa (Line Chart)")
-    st.info("Data akan muncul setelah beberapa kali analisis. Untuk demo, hanya preview.")
-    # Simple line chart demo (opsional)
+    st.subheader("📈 Tren Performa")
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=[1,2,3], y=[roas_aktual*0.8, roas_aktual, roas_aktual*1.1], mode='lines+markers', name='ROAS'))
     fig.update_layout(height=300, margin=dict(l=0,r=0,t=30,b=0), plot_bgcolor='#1a1a2e', paper_bgcolor='#1a1a2e', font_color='white')
     st.plotly_chart(fig, use_container_width=True)
 
-# ==================== GENERATOR PREMIUM (dengan popup untuk demo) ====================
+# ==================== GENERATOR ====================
 st.markdown("---")
-st.subheader("✨ Generator SEO & Deskripsi Produk")
-tab1, tab2, tab3 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook TikTok"])
+st.subheader("✨ Generator SEO & Deskripsi")
 
-# Fungsi untuk mengecek akses generator (premium atau demo belum mencapai limit)
 def generator_access():
     if is_premium():
         return True
     if can_do_demo_generator():
         return True
     st.warning("⚠️ Demo hanya 2x generate. Beli premium untuk unlimited!")
-    st.markdown(f'<a href="{WA_LINK}" target="_blank" class="btn-primary">💎 Beli Premium</a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{WA_LINK}" target="_blank" style="display:block; background:#00E5A0; color:#1a1a2e; text-align:center; padding:12px; border-radius:40px; text-decoration:none;">💎 Beli Premium</a>', unsafe_allow_html=True)
     return False
 
+tab1, tab2, tab3 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook TikTok"])
+
 with tab1:
-    st.markdown("Buat judul produk yang menarik.")
-    prod_title = st.text_input("Nama Produk", key="seo_title")
+    prod_title = st.text_input("Nama Produk", key="seo")
     if st.button("✨ Generate Judul SEO"):
         if generator_access():
             if not is_premium():
                 inc_demo_generator()
             if prod_title:
-                titles = [f"🔥 {prod_title} - Kualitas Premium!", f"💯 {prod_title} BEST SELLER!", f"✨ WAJIB PUNYA! {prod_title}", f"🎯 {prod_title} Dijamin Nyaman", f"💎 {prod_title} PREMIUM QUALITY"]
-                for t in titles:
+                for t in [f"🔥 {prod_title} - Kualitas Premium!", f"💯 {prod_title} BEST SELLER!", f"✨ WAJIB PUNYA! {prod_title}"]:
                     st.markdown(f"- {t}")
-            else:
-                st.warning("Masukkan nama produk.")
 
 with tab2:
-    st.markdown("Buat deskripsi produk yang meyakinkan.")
-    prod_desc = st.text_input("Nama Produk", key="desc_prod")
+    prod_desc = st.text_input("Nama Produk", key="desc")
     manfaat = st.text_area("Manfaat (pisahkan koma)")
     if st.button("✨ Generate Deskripsi"):
         if generator_access():
             if not is_premium():
                 inc_demo_generator()
             if prod_desc:
-                desc = f"✨ {prod_desc} - Kualitas Premium!\n✅ Bahan berkualitas\n✅ Desain modern\n✅ Size lengkap\n✅ Garansi 100%\n\n🔥 Promo terbatas! Order sekarang."
-                st.code(desc, language="markdown")
-            else:
-                st.warning("Masukkan nama produk.")
+                st.code(f"✨ {prod_desc} - Kualitas Premium!\n✅ Bahan berkualitas\n✅ Desain modern\n✅ Size lengkap\n✅ Garansi 100%\n\n🔥 Promo terbatas! Order sekarang.")
 
 with tab3:
-    st.markdown("Buat hook video TikTok 3 detik pertama.")
-    prod_hook = st.text_input("Nama Produk", key="hook_prod")
-    style = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity"])
+    prod_hook = st.text_input("Nama Produk", key="hook")
+    style = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial"])
     if st.button("✨ Generate Hook"):
         if generator_access():
             if not is_premium():
                 inc_demo_generator()
             if prod_hook:
-                hooks = [f"😫 Capek cari {prod_hook}? STOP!", f"🔥 DISKON 50% {prod_hook}!", f"🏆 {prod_hook} best seller!", f"🤔 Kenapa semua pake {prod_hook}?"]
-                for h in hooks:
+                for h in [f"😫 Capek cari {prod_hook}? STOP!", f"🔥 DISKON 50% {prod_hook}!", f"🏆 {prod_hook} best seller!"]:
                     st.markdown(f"- 🎬 {h}")
-            else:
-                st.warning("Masukkan nama produk.")
 
 # ==================== FOOTER ====================
 st.markdown("---")
-st.markdown(f"""
+st.markdown("""
 <div style="text-align:center; font-size:12px; color:#888;">
     <p>🩺 DOCTOR ADS SHOPEE & TIKTOK PREMIUM</p>
     <p>© 2024 Arkidigital - Solusi Digital Marketing Terbaik</p>
