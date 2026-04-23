@@ -82,7 +82,7 @@ def apply_premium_style():
         font-weight: bold;
     }
 
-    /* CTA UPGRADE - hanya muncul di halaman login */
+    /* CTA UPGRADE */
     .cta-upgrade {
         background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%);
         color: #020617 !important;
@@ -104,24 +104,141 @@ def apply_premium_style():
         box-shadow: 0 20px 50px rgba(0, 229, 160, 0.7);
     }
 
-    .stNumberInput input, .stTextInput input, .stSelectbox div {
-        background: rgba(0,0,0,0.7) !important; 
-        border: 1px solid rgba(255,255,255,0.3) !important; 
+    /* ============ STYLE UNTUK INPUT KOLOM ============ */
+    /* Input number - selaras dengan background */
+    .stNumberInput input, .stTextInput input, .stSelectbox div, .stTextArea textarea {
+        background: rgba(15, 25, 45, 0.9) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.2) !important; 
         border-radius: 12px !important; 
         color: #FFFFFF !important;
+        font-size: 1rem !important;
+        padding: 10px !important;
     }
     
-    /* WARNING text */
-    .stAlert {
-        color: #000000 !important;
+    .stNumberInput input:focus, .stTextInput input:focus, .stSelectbox div:focus {
+        border-color: #00E5A0 !important;
+        box-shadow: 0 0 0 2px rgba(0, 229, 160, 0.2) !important;
     }
     
-    /* Info box text */
-    .stInfo, .stSuccess, .stWarning, .stError {
-        color: #000000 !important;
+    /* ============ TOMBOL RUN ANALYTICS ============ */
+    .stButton button {
+        background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
+        color: #020617 !important;
+        font-weight: 800 !important;
+        font-size: 1.2rem !important;
+        padding: 12px 30px !important;
+        border-radius: 40px !important;
+        border: none !important;
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+        box-shadow: 0 5px 15px rgba(0, 229, 160, 0.3) !important;
     }
     
-    /* Metric cards text */
+    .stButton button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(0, 229, 160, 0.5) !important;
+    }
+    
+    /* ============ KOLOM REKOMENDASI ============ */
+    /* Danger (merah) untuk urgent */
+    .rekom-danger {
+        background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+        border-left: 5px solid #ef4444;
+        border-radius: 16px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .rekom-danger h3, .rekom-danger p, .rekom-danger strong {
+        color: #fecaca !important;
+    }
+    
+    /* Warning (kuning) untuk optimasi */
+    .rekom-warning {
+        background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+        border-left: 5px solid #f59e0b;
+        border-radius: 16px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .rekom-warning h3, .rekom-warning p, .rekom-warning strong {
+        color: #fde68a !important;
+    }
+    
+    /* Success (hijau) untuk scale */
+    .rekom-success {
+        background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%);
+        border-left: 5px solid #10b981;
+        border-radius: 16px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .rekom-success h3, .rekom-success p, .rekom-success strong {
+        color: #a7f3d0 !important;
+    }
+    
+    /* Info (biru) untuk pantau */
+    .rekom-info {
+        background: linear-gradient(135deg, #0c4a6e 0%, #0284c7 100%);
+        border-left: 5px solid #3b82f6;
+        border-radius: 16px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .rekom-info h3, .rekom-info p, .rekom-info strong {
+        color: #bae6fd !important;
+    }
+    
+    /* ============ GENERATOR CARD ============ */
+    .generator-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 20px;
+        padding: 20px;
+        margin: 10px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .generator-card:hover {
+        border-color: #00E5A0;
+        transform: translateY(-2px);
+    }
+    
+    /* Code block untuk hasil generator */
+    .stCodeBlock {
+        background: #0f172a !important;
+        border-radius: 12px !important;
+        border: 1px solid #334155 !important;
+    }
+    
+    .stCodeBlock div {
+        color: #E2E8F0 !important;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: rgba(15, 25, 45, 0.5);
+        border-radius: 40px;
+        padding: 6px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 32px;
+        padding: 8px 20px;
+        font-weight: 600;
+        color: #94A3B8 !important;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
+        color: #020617 !important;
+    }
+    
+    /* Metric cards */
     .metric-value {
         color: #FFFFFF !important;
         font-size: 2rem;
@@ -131,6 +248,19 @@ def apply_premium_style():
     .metric-label {
         color: #94A3B8 !important;
         font-size: 0.8rem;
+    }
+    
+    /* Alert / Info box */
+    .stAlert {
+        color: #000000 !important;
+    }
+    
+    /* Wrapper untuk analisis */
+    .analytics-wrapper {
+        background: rgba(15, 25, 45, 0.6);
+        border-radius: 20px;
+        padding: 20px;
+        margin-top: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -196,7 +326,7 @@ def delete_product(nama):
     products = st.session_state.products
     st.session_state.products = [p for p in products if p["nama"] != nama]
 
-# ==================== FUNGSI REKOMENDASI (1-5) ====================
+# ==================== FUNGSI REKOMENDASI ====================
 def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_set, target_roas, budget_spent, ctr):
     """Menghasilkan rekomendasi berdasarkan aturan 1-5"""
     rekom_tindakan = ""
@@ -205,7 +335,6 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
     prioritas = ""
     warna = "info"
     
-    # ATURAN 1: KLIK BANYAK, BUDGET HABIS, ORDER 0 → STOP IKLAN
     if clicks > 50 and s_rate >= 80 and orders == 0:
         prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
@@ -224,7 +353,6 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 **Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**"""
     
-    # ATURAN 2: SIAP SCALE
     elif s_rate >= 85 and roas_aktual >= roas_bep * 1.2:
         prioritas = "🟢 PRIORITAS 4 - SIAP SCALE"
         warna = "success"
@@ -238,13 +366,8 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 ✅ Naikkan **BUDGET 30%** menjadi {format_rp(rekom_budget)}
 ✅ **PERTAHANKAN** target ROAS di {target_roas:.1f}x
 
-⏰ **Tunggu 3 hari** tanpa perubahan apapun.
-
-📌 Evaluasi setelah 3 hari:
-- Jika ROAS tetap stabil → bisa scale lagi 30%
-- Jika ROAS turun drastis → turunkan budget ke semula"""
+⏰ **Tunggu 3 hari** tanpa perubahan apapun."""
     
-    # ATURAN 3: ROAS PROFIT, BUDGET BELUM HABIS
     elif roas_aktual >= roas_bep and s_rate < 85:
         prioritas = "🟡 PRIORITAS 2 - OPTIMASI"
         warna = "warning"
@@ -258,34 +381,21 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 ✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
 ✅ **JANGAN UBAH BUDGET** (tetap {format_rp(budget_set)})
 
-⏰ **Tunggu 3 hari** tanpa perubahan apapun.
-
-📌 Evaluasi setelah 3 hari:
-- Jika budget sudah habis → siap scale
-- Jika masih belum habis → turunkan ROAS lagi 0.5 poin"""
+⏰ **Tunggu 3 hari** tanpa perubahan apapun."""
     
-    # ATURAN 4: IKLAN RUGI
     elif roas_aktual < roas_bep and roas_aktual > 0:
         prioritas = "🔴 PRIORITAS 3 - IKLAN RUGI"
         warna = "danger"
         rekom_roas = roas_bep + 0.5
         rekom_budget = budget_set * 0.7
-        rugi = (roas_bep - roas_aktual) * budget_spent
         rekom_tindakan = f"""💸 **IKLAN RUGI!**
 
 📉 ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
-💰 Estimasi kerugian: {format_rp(rugi)} dari {format_rp(budget_spent)} yang terpakai
-
-**Penyebab:** Target ROAS terlalu rendah atau produk kurang meyakinkan.
 
 **Solusi:**
 ✅ Naikkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
-🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian
-
-**Atau jika produk belum layak:**
-- Berhenti iklan sementara, perbaiki produk (harga, review, deskripsi)"""
+🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian"""
     
-    # ATURAN 5: PERFORMA SEHAT
     elif roas_aktual >= roas_bep:
         prioritas = "🟢 PRIORITAS 5 - PANTAU"
         rekom_tindakan = f"""✅ **PERFORMA SEHAT**
@@ -295,11 +405,8 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 **Rekomendasi:**
 ✅ Pertahankan setting saat ini
-⏰ Pantau selama **3-5 hari** tanpa perubahan
-
-📌 Jika konsisten (ROAS tetap di atas BEP dan budget habis), siap scale dengan menaikkan budget 30% (jangan sentuh ROAS)."""
+⏰ Pantau selama **3-5 hari** tanpa perubahan"""
     
-    # TAMBAHAN: CTR RENDAH
     if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan:
         rekom_tindakan += f"""
 
@@ -319,7 +426,6 @@ if st.session_state.demo_mode and st.session_state.demo_start_time:
     if elapsed > 300 or st.session_state.demo_analysis_count >= 2:
         demo_expired = True
 
-# CEK APAKAH PREMIUM ATAU DEMO
 is_premium = st.session_state.authenticated
 
 if (not is_premium and not st.session_state.demo_mode) or demo_expired:
@@ -384,7 +490,6 @@ with st.sidebar:
                     st.rerun()
     
     st.markdown("---")
-    # HANYA TAMPILKAN TOMBOL PREMIUM JIKA PENGGUNA BUKAN PREMIUM
     if not is_premium:
         st.markdown(f'<a href="{CHECKOUT_LINK}" target="_blank" style="display:block; text-align:center; background:#00E5A0; color:#020617; padding:10px; border-radius:40px; text-decoration:none; font-weight:bold;">💎 Upgrade Premium</a>', unsafe_allow_html=True)
     else:
@@ -444,8 +549,11 @@ budget_set = ip3.number_input("Budget Setting", value=200000, key="budget_set_ma
 target_roas_p = st.number_input("🎯 Target ROAS", value=6.0, key="target_roas_main")
 
 # Tombol Analisis
-if st.button("RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics"):
-    # Update session state
+col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+with col_btn2:
+    analize_clicked = st.button("⚡ RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics")
+
+if analize_clicked:
     if st.session_state.demo_mode:
         st.session_state.demo_analysis_count += 1
     
@@ -456,7 +564,7 @@ if st.button("RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics"
     profit_est_p = (laba_kotor_p * orders) - budget_spent if orders > 0 else -budget_spent
     cpc_p = budget_spent/clicks if clicks > 0 else 0
     
-    # Simpan ke session state untuk ditampilkan
+    # Simpan ke session state
     st.session_state.analysis_done = True
     st.session_state.last_ctr = ctr_p
     st.session_state.last_roas = roas_akt_p
@@ -469,12 +577,19 @@ if st.button("RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics"
     st.session_state.last_budget_spent = budget_spent
     st.session_state.last_target_roas = target_roas_p
     
+    st.markdown('<div class="analytics-wrapper">', unsafe_allow_html=True)
+    
     # Metric Cards
     m1, m2, m3, m4 = st.columns(4)
-    m1.markdown(f'<div class="premium-card"><h5 style="color:#94A3B8;">📈 CTR</h5><h2 style="color:#FFFFFF;">{ctr_p:.2f}%</h2><p style="color:#94A3B8;">{"✅ Normal" if ctr_p >= 2 else "⚠️ Rendah"}</p></div>', unsafe_allow_html=True)
-    m2.markdown(f'<div class="premium-card"><h5 style="color:#94A3B8;">💰 ROAS</h5><h2 style="color:#00E5A0;">{roas_akt_p:.2f}x</h2><p style="color:#94A3B8;">{"🟢 Profit" if roas_akt_p >= roas_bep_p else "🔴 Rugi"}</p></div>', unsafe_allow_html=True)
-    m3.markdown(f'<div class="premium-card"><h5 style="color:#94A3B8;">💎 PROFIT</h5><h2 style="color:{"#00E5A0" if profit_est_p > 0 else "#FF6B6B"};">{format_rp(profit_est_p)}</h2><p style="color:#94A3B8;">{"Untung" if profit_est_p > 0 else "Rugi"}</p></div>', unsafe_allow_html=True)
-    m4.markdown(f'<div class="premium-card"><h5 style="color:#94A3B8;">🎯 BEP</h5><h2 style="color:#FFFFFF;">{roas_bep_p:.2f}x</h2><p style="color:#94A3B8;">{"✅ Aman" if roas_akt_p >= roas_bep_p else "⚠️ Dibawah"}</p></div>', unsafe_allow_html=True)
+    with m1:
+        st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">📈 CTR</p><h2 style="color:#FFFFFF; margin:0;">{ctr_p:.2f}%</h2><p style="color:#94A3B8; font-size:0.8rem;">{"✅ Normal" if ctr_p >= 2 else "⚠️ Rendah"}</p></div>', unsafe_allow_html=True)
+    with m2:
+        st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">💰 ROAS</p><h2 style="color:#00E5A0; margin:0;">{roas_akt_p:.2f}x</h2><p style="color:#94A3B8; font-size:0.8rem;">{"🟢 Profit" if roas_akt_p >= roas_bep_p else "🔴 Rugi"}</p></div>', unsafe_allow_html=True)
+    with m3:
+        profit_color = "#00E5A0" if profit_est_p > 0 else "#FF6B6B"
+        st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">💎 PROFIT</p><h2 style="color:{profit_color}; margin:0;">{format_rp(profit_est_p)}</h2><p style="color:#94A3B8; font-size:0.8rem;">{"Untung" if profit_est_p > 0 else "Rugi"}</p></div>', unsafe_allow_html=True)
+    with m4:
+        st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">🎯 BEP</p><h2 style="color:#FFFFFF; margin:0;">{roas_bep_p:.2f}x</h2><p style="color:#94A3B8; font-size:0.8rem;">{"✅ Aman" if roas_akt_p >= roas_bep_p else "⚠️ Dibawah"}</p></div>', unsafe_allow_html=True)
     
     # ==================== AI SUMMARY ====================
     if GEMINI_API_KEY:
@@ -491,9 +606,9 @@ Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah i
 """
             ai_summary = call_gemini_api(summary_prompt)
             if ai_summary:
-                st.markdown(f'<div class="premium-card"><h3 style="color:#FFD700;">🤖 AI Insight</h3><p style="font-size:1.1rem;">{ai_summary}</p></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="premium-card"><h3 style="color:#FFD700;">🤖 AI Insight</h3><p style="font-size:1rem;">{ai_summary}</p></div>', unsafe_allow_html=True)
     
-    # ==================== REKOMENDASI 1-5 (WAJIB MUNCUL) ====================
+    # ==================== REKOMENDASI 1-5 ====================
     st.markdown("### 🎯 Rekomendasi Strategis")
     
     rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna = generate_rekomendasi(
@@ -501,17 +616,26 @@ Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah i
         budget_set, target_roas_p, budget_spent, ctr_p
     )
     
-    bg_c = {"danger":"#fee2e2", "warning":"#fef3c7", "success":"#d1fae5", "info":"#dbeafe"}.get(warna, "#f0f0ff")
-    br_c = {"danger":"#dc2626", "warning":"#f59e0b", "success":"#10b981", "info":"#3b82f6"}.get(warna, "#667eea")
+    # Pilih class berdasarkan warna
+    if warna == "danger":
+        rekom_class = "rekom-danger"
+    elif warna == "warning":
+        rekom_class = "rekom-warning"
+    elif warna == "success":
+        rekom_class = "rekom-success"
+    else:
+        rekom_class = "rekom-info"
     
     st.markdown(f"""
-    <div style="background:{bg_c}; border-radius:1rem; padding:2rem; border-left:10px solid {br_c}; margin:1rem 0;">
-        <h3 style="margin:0 0 0.5rem 0; font-weight: 800; color:#1a1a2e;">{prioritas}</h3>
-        <p style="font-size:1.15rem; line-height:1.6; color:#1a1a2e;">{rekom_tindakan.replace(chr(10), '<br>')}</p>
-        <hr style="border:0.5px solid {br_c}; opacity:0.3;">
-        <p style="color:#1a1a2e;"><strong>💰 Budget Rekomendasi:</strong> {format_rp(rekom_budget)} | <strong>🎯 Target ROAS:</strong> {rekom_roas:.1f}x</p>
+    <div class="{rekom_class}">
+        <h3 style="margin:0 0 10px 0;">{prioritas}</h3>
+        <p style="font-size:1rem; line-height:1.6;">{rekom_tindakan.replace(chr(10), '<br>')}</p>
+        <hr style="border:0.5px solid rgba(255,255,255,0.2); margin:15px 0;">
+        <p><strong>💰 Budget Rekomendasi:</strong> {format_rp(rekom_budget)} | <strong>🎯 Target ROAS:</strong> {rekom_roas:.1f}x</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -523,10 +647,10 @@ if st.session_state.analysis_done and st.session_state.last_roas >= st.session_s
     
     st.markdown(f"""
     <div style="background:rgba(0,229,160,0.1); border-radius:16px; padding:1.5rem;">
-        <p style="color:#E2E8F0;"><strong>💰 Jika Naikkan Budget 30%:</strong> {format_rp(new_budget_pred)}/hari</p>
-        <p style="color:#E2E8F0;"><strong>📈 Estimasi ROAS:</strong> {st.session_state.last_roas * 0.95:.1f}x - {st.session_state.last_roas * 1.05:.1f}x</p>
-        <p style="color:#E2E8F0;"><strong>💎 Estimasi Profit:</strong> {format_rp(prediksi_profit)}/hari</p>
-        <p style="color:#E2E8F0;"><strong>⚠️ Level Resiko:</strong> Rendah</p>
+        <p><strong>💰 Jika Naikkan Budget 30%:</strong> {format_rp(new_budget_pred)}/hari</p>
+        <p><strong>📈 Estimasi ROAS:</strong> {st.session_state.last_roas * 0.95:.1f}x - {st.session_state.last_roas * 1.05:.1f}x</p>
+        <p><strong>💎 Estimasi Profit:</strong> {format_rp(prediksi_profit)}/hari</p>
+        <p><strong>⚠️ Level Resiko:</strong> Rendah</p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -543,7 +667,7 @@ if st.session_state.analysis_done and st.session_state.last_roas > 0:
     
     st.markdown(f"""
     <div style="background:rgba(255,215,0,0.1); border-radius:16px; padding:1.5rem;">
-        <p style="color:#E2E8F0;">{prediksi}</p>
+        <p>{prediksi}</p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -567,7 +691,7 @@ if st.session_state.analysis_done and st.session_state.last_roas > 0:
     
     st.markdown(f"""
     <div style="background:rgba(0,229,160,0.1); border-radius:16px; padding:1.5rem;">
-        <p style="color:#E2E8F0;"><strong>📌 {pesan}</strong></p>
+        <p><strong>📌 {pesan}</strong></p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -599,31 +723,42 @@ st.markdown("<h2 class='gold-header'>✨ Elite Copywriter Lab</h2>", unsafe_allo
 tab1, tab2, tab3, tab4 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook Video", "#️⃣ Hashtag"])
 
 with tab1:
+    st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="seo_name")
-    if st.button("Generate Elite SEO Title", key="gen_seo"):
+    if st.button("✨ Generate Elite SEO Title", key="gen_seo", use_container_width=True):
         with st.spinner("🧠 AI sedang merancang judul..."):
             if p_name:
                 res = call_gemini_api(f"Buat 5 judul untuk '{p_name}' di Shopee. Judul menarik, ada emoji, fokus manfaat. Output per baris.")
-                st.code(res if res else f"🔥 {p_name} - Kualitas Premium\n💯 {p_name} BEST SELLER", language="text")
+                if res:
+                    st.code(res, language="text")
+                else:
+                    st.code(f"🔥 {p_name} - Kualitas Premium\n💯 {p_name} BEST SELLER\n✨ WAJIB PUNYA! {p_name}", language="text")
             else:
                 st.warning("Masukkan nama produk.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with tab2:
+    st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name_desc = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="desc_name")
     manfaat = st.text_area("Manfaat (pisahkan koma)", placeholder="Contoh: adem, nyaman, tidak panas", key="manfaat_desc")
-    if st.button("Generate Elite Deskripsi", key="gen_desc"):
+    if st.button("✨ Generate Elite Deskripsi", key="gen_desc", use_container_width=True):
         with st.spinner("🧠 AI sedang menulis deskripsi..."):
             if p_name_desc:
                 prompt = f"Buat deskripsi untuk '{p_name_desc}' di Shopee. Manfaat: {manfaat}. Gunakan emoji, ajakan beli."
                 res = call_gemini_api(prompt)
-                st.code(res if res else f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}", language="markdown")
+                if res:
+                    st.code(res, language="markdown")
+                else:
+                    st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}\n🔥 Promo terbatas!", language="markdown")
             else:
                 st.warning("Masukkan nama produk.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with tab3:
+    st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name_hook = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hook_name")
     gaya = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="gaya_hook")
-    if st.button("Generate Elite Hook", key="gen_hook"):
+    if st.button("✨ Generate Elite Hook", key="gen_hook", use_container_width=True):
         with st.spinner("🧠 AI sedang membuat hook..."):
             if p_name_hook:
                 prompt = f"Buat 5 hook untuk '{p_name_hook}' di TikTok. Gaya: {gaya}. Hook 3 detik pertama."
@@ -635,21 +770,28 @@ with tab3:
                 else:
                     st.markdown(f"- 🎬 😫 Capek cari {p_name_hook}? STOP!")
                     st.markdown(f"- 🎬 🔥 DISKON 50% {p_name_hook}!")
+                    st.markdown(f"- 🎬 🏆 {p_name_hook} BEST SELLER!")
             else:
                 st.warning("Masukkan nama produk.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with tab4:
+    st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
     niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
-    if st.button("Generate Hashtag Viral", key="gen_hash"):
+    if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
         with st.spinner("🧠 AI sedang membuat hashtag..."):
             if p_name_hash:
                 prompt = f"Buat 15 hashtag TikTok untuk '{p_name_hash}', niche {niche_hash}. Format: #fyp #viral #namaproduk"
                 res = call_gemini_api(prompt)
-                st.code(res if res else "#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon", language="text")
+                if res:
+                    st.code(res, language="text")
+                else:
+                    st.code("#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon #murah #berkualitas #premium", language="text")
             else:
                 st.warning("Masukkan nama produk.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== FOOTER - HANYA UNTUK NON PREMIUM ====================
+# ==================== FOOTER ====================
 if not is_premium:
     st.markdown(f'<div style="text-align:center; padding:60px;"><a href="{CHECKOUT_LINK}" target="_blank" class="cta-upgrade">💎 UPGRADE PREMIUM - AKSES TANPA BATAS</a></div>', unsafe_allow_html=True)
