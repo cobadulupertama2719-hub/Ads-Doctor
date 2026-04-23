@@ -8,9 +8,8 @@ import hashlib
 ADMIN_USERNAME = "arkidigital"
 ADMIN_PASSWORD = "Arkidigital2026"
 
-# LINK CHECKOUT PAGE (GANTI DENGAN LINK MAS)
+# LINK CHECKOUT PAGE
 CHECKOUT_LINK = "https://muhammad-masruri.myscalev.com/checkout-pageku"
-WA_LINK = CHECKOUT_LINK  # Semua tombol beli akan ke checkout page
 
 DEMO_DURATION_MINUTES = 5
 MAX_DEMO_ANALYSIS = 2
@@ -167,18 +166,18 @@ with st.sidebar:
     if is_premium():
         products = load_products()
         with st.expander("➕ Tambah/Edit Produk"):
-            nama = st.text_input("Nama Produk")
-            hj = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000)
-            modal = st.number_input("Modal", min_value=500, value=60000, step=5000)
-            admin = st.slider("Admin %", 5, 30, 20)
-            if st.button("💾 Simpan") and nama:
+            nama = st.text_input("Nama Produk", key="nama_produk_input")
+            hj = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000, key="hj_input")
+            modal = st.number_input("Modal", min_value=500, value=60000, step=5000, key="modal_input")
+            admin = st.slider("Admin %", 5, 30, 20, key="admin_input")
+            if st.button("💾 Simpan", key="simpan_produk") and nama:
                 admin_nom = hj * admin/100
                 laba = hj - modal - admin_nom
                 roas_bep = hj / laba if laba > 0 else 999
                 save_product({"nama": nama, "harga_jual": hj, "modal": modal, "admin_persen": admin, "laba_kotor": laba, "roas_bep": roas_bep})
                 st.success("Tersimpan")
         if products:
-            pilih = st.selectbox("Pilih produk", ["--"] + [p["nama"] for p in products])
+            pilih = st.selectbox("Pilih produk", ["--"] + [p["nama"] for p in products], key="pilih_produk")
             if pilih != "--":
                 prod = next(p for p in products if p["nama"] == pilih)
                 harga_jual = prod["harga_jual"]
@@ -187,37 +186,36 @@ with st.sidebar:
                 laba_kotor = prod["laba_kotor"]
                 roas_bep = prod["roas_bep"]
                 st.info(f"ROAS BEP: {roas_bep:.1f}x | Laba: Rp{laba_kotor:,.0f}")
-                if st.button("🗑️ Hapus"):
+                if st.button("🗑️ Hapus", key="hapus_produk"):
                     delete_product(pilih)
                     st.rerun()
             else:
-                harga_jual = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000, key="manual_hj")
-                modal = st.number_input("Modal", min_value=500, value=60000, step=5000, key="manual_modal")
-                admin_persen = st.slider("Admin %", 5, 30, 20, key="manual_admin")
+                harga_jual = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000, key="manual_hj_sidebar")
+                modal = st.number_input("Modal", min_value=500, value=60000, step=5000, key="manual_modal_sidebar")
+                admin_persen = st.slider("Admin %", 5, 30, 20, key="manual_admin_sidebar")
                 admin_nom = harga_jual * admin_persen/100
                 laba_kotor = harga_jual - modal - admin_nom
                 roas_bep = harga_jual / laba_kotor if laba_kotor > 0 else 999
         else:
-            harga_jual = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000)
-            modal = st.number_input("Modal", min_value=500, value=60000, step=5000)
-            admin_persen = st.slider("Admin %", 5, 30, 20)
+            harga_jual = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000, key="hj_default")
+            modal = st.number_input("Modal", min_value=500, value=60000, step=5000, key="modal_default")
+            admin_persen = st.slider("Admin %", 5, 30, 20, key="admin_default")
             admin_nom = harga_jual * admin_persen/100
             laba_kotor = harga_jual - modal - admin_nom
             roas_bep = harga_jual / laba_kotor if laba_kotor > 0 else 999
     else:
         st.info("🎁 Mode Demo: input manual")
-        harga_jual = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000)
-        modal = st.number_input("Modal", min_value=500, value=60000, step=5000)
-        admin_persen = st.slider("Admin %", 5, 30, 20)
+        harga_jual = st.number_input("Harga Jual", min_value=1000, value=100000, step=5000, key="hj_demo")
+        modal = st.number_input("Modal", min_value=500, value=60000, step=5000, key="modal_demo")
+        admin_persen = st.slider("Admin %", 5, 30, 20, key="admin_demo")
         admin_nom = harga_jual * admin_persen/100
         laba_kotor = harga_jual - modal - admin_nom
         roas_bep = harga_jual / laba_kotor if laba_kotor > 0 else 999
         st.caption("💎 Beli premium untuk simpan produk")
     
-    # ==================== HITUNG ROAS BEP (KALKULATOR) ====================
+    # ==================== HITUNG ROAS BEP ====================
     st.markdown("---")
     st.markdown("## 🎯 **Hitung ROAS BEP**")
-    st.markdown("Masukkan harga produk dan modal untuk mengetahui BEP")
     
     with st.expander("📊 Kalkulator ROAS BEP", expanded=True):
         col_bep1, col_bep2 = st.columns(2)
@@ -246,7 +244,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("📋 Gunakan ROAS BEP ini ke analisis", use_container_width=True):
+        if st.button("📋 Gunakan ROAS BEP ini ke analisis", key="gunakan_bep"):
             st.session_state["bep_hj"] = hj_bep
             st.session_state["bep_modal"] = modal_bep
             st.session_state["bep_admin"] = admin_bep
@@ -255,14 +253,14 @@ with st.sidebar:
             st.success(f"✅ ROAS BEP {roas_bep_hasil:.1f}x siap digunakan!")
     
     with st.expander("📋 **Cek Kelayakan Produk**"):
-        pernah = st.radio("Produk pernah laku?", ["Ya","Tidak"], horizontal=True)
+        pernah = st.radio("Produk pernah laku?", ["Ya","Tidak"], horizontal=True, key="pernah_laku")
         if pernah == "Tidak":
             st.error("❌ Jangan iklan dulu!")
         else:
-            terjual = st.number_input("Terjual/bulan", 0, 100000, 500)
+            terjual = st.number_input("Terjual/bulan", 0, 100000, 500, key="terjual")
             if terjual < 1000:
                 st.warning("⚠️ Kurang kuat, tes kecil dulu.")
-            harga_komp = st.number_input("Harga kompetitor", min_value=1000, value=90000, step=5000)
+            harga_komp = st.number_input("Harga kompetitor", min_value=1000, value=90000, step=5000, key="harga_komp")
             if harga_jual > harga_komp * 1.2:
                 st.warning("⚠️ Harga terlalu tinggi.")
             if laba_kotor <= 0:
@@ -290,17 +288,17 @@ if not is_premium() and not can_do_demo_analysis():
 
 colA, colB = st.columns(2)
 with colA:
-    impressions = st.number_input("👁️ Impressions", min_value=0, value=10000, step=1000)
-    clicks = st.number_input("🖱️ Clicks", min_value=0, value=300, step=50)
-    budget_set = st.number_input("💵 Budget Setting (Rp)", min_value=0, value=100000, step=10000)
+    impressions = st.number_input("👁️ Impressions", min_value=0, value=10000, step=1000, key="impressions")
+    clicks = st.number_input("🖱️ Clicks", min_value=0, value=300, step=50, key="clicks")
+    budget_set = st.number_input("💵 Budget Setting (Rp)", min_value=0, value=100000, step=10000, key="budget_set")
 with colB:
-    budget_spent = st.number_input("💸 Budget Terserap (Rp)", min_value=0, value=90000, step=5000)
-    target_roas = st.number_input("🎯 Target ROAS", min_value=1.0, value=6.0, step=0.5)
-    sales = st.number_input("💰 Omset (Rp)", min_value=0, value=600000, step=50000)
-    orders = st.number_input("📦 Jumlah Order", min_value=0, value=6, step=1)
-    platform = st.selectbox("📱 Platform", ["Shopee", "TikTok"])
+    budget_spent = st.number_input("💸 Budget Terserap (Rp)", min_value=0, value=90000, step=5000, key="budget_spent")
+    target_roas = st.number_input("🎯 Target ROAS", min_value=1.0, value=6.0, step=0.5, key="target_roas")
+    sales = st.number_input("💰 Omset (Rp)", min_value=0, value=600000, step=50000, key="sales")
+    orders = st.number_input("📦 Jumlah Order", min_value=0, value=6, step=1, key="orders")
+    platform = st.selectbox("📱 Platform", ["Shopee", "TikTok"], key="platform")
 
-analize = st.button("🔍 Analisis Iklan", use_container_width=True)
+analize = st.button("🔍 Analisis Iklan", use_container_width=True, key="analize_btn")
 
 # ==================== ANALISIS & REKOMENDASI ====================
 if analize:
@@ -324,7 +322,7 @@ if analize:
             return f"Rp{angka/1000:.0f}RB"
         return f"Rp{angka:,.0f}"
     
-    # Metric cards (5 kolom termasuk ROAS BEP)
+    # Metric cards
     st.markdown("### 📊 Dashboard Performa")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -340,7 +338,7 @@ if analize:
         status_bep = "✅ Aman" if roas_aktual >= roas_bep else "⚠️ Rugi"
         st.markdown(f"<div style='background:#1a1a2e; padding:1rem; border-radius:1rem; border-left:4px solid #00E5A0;'><p style='color:#888; margin:0'>ROAS BEP</p><h2 style='color:white; margin:0'>{roas_bep:.1f}x</h2><p style='color:#888; margin:0; font-size:0.7rem;'>{status_bep}</p></div>", unsafe_allow_html=True)
     
-    # ==================== REKOMENDASI ====================
+    # Rekomendasi
     st.markdown("---")
     st.subheader("🎯 **Kesimpulan & Rekomendasi**")
     
@@ -366,7 +364,7 @@ if analize:
         prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
     
-    # ATURAN 2: SIAP SCALE (naikkan budget 30%, ROAS tetap)
+    # ATURAN 2: SIAP SCALE
     elif budget_terserap_persen >= 85 and roas_aktual >= roas_bep * 1.2:
         new_budget = budget_set * 1.3
         rekomendasi_tindakan = f"""
@@ -381,7 +379,7 @@ if analize:
         prioritas = "🟢 PRIORITAS 4 - SCALE (Naik Budget 30%)"
         warna = "success"
     
-    # ATURAN 3: ROAS PROFIT, BUDGET BELUM HABIS → TURUNKAN ROAS
+    # ATURAN 3: ROAS PROFIT, BUDGET BELUM HABIS
     elif roas_aktual >= roas_bep and budget_terserap_persen < 85:
         new_target = target_roas - 0.5
         rekomendasi_tindakan = f"""
@@ -396,7 +394,7 @@ if analize:
         prioritas = "🟡 PRIORITAS 2 - OPTIMASI (Turun ROAS)"
         warna = "warning"
     
-    # ATURAN 4: IKLAN RUGI → NAIKKAN ROAS
+    # ATURAN 4: IKLAN RUGI
     elif roas_aktual < roas_bep and roas_aktual > 0:
         new_target = roas_bep + 0.5
         rekomendasi_tindakan = f"""
@@ -443,7 +441,7 @@ if analize:
     </div>
     """, unsafe_allow_html=True)
 
-# ==================== GENERATOR SEO & DESKRIPSI (2 MODE) ====================
+# ==================== GENERATOR ====================
 st.markdown("---")
 st.subheader("✨ Generator SEO & Deskripsi Produk")
 st.markdown("Pilih mode sesuai platform target kamu:")
@@ -457,21 +455,19 @@ def generator_access():
     st.markdown(f'<a href="{CHECKOUT_LINK}" target="_blank" style="display:block; background:#00E5A0; color:#1a1a2e; text-align:center; padding:12px; border-radius:40px; text-decoration:none;">💎 Beli Premium</a>', unsafe_allow_html=True)
     return False
 
-# Pilih Mode
-mode_generator = st.radio("Pilih Mode:", ["🛍️ Mode Shopee (SEO Panjang)", "🎥 Mode TikTok (Viral & Emosional)"], horizontal=True)
+mode_generator = st.radio("Pilih Mode:", ["🛍️ Mode Shopee (SEO Panjang)", "🎥 Mode TikTok (Viral & Emosional)"], horizontal=True, key="mode_generator")
 
 tab1, tab2, tab3 = st.tabs(["📝 SEO Title", "📄 Deskripsi Produk", "🎬 Hook Video TikTok"])
 
-# ==================== MODE SHOPEE (SEO Panjang) ====================
+# Mode Shopee
 if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
     with tab1:
         st.markdown("### 🔍 **Mode Shopee - SEO Title**")
-        st.caption("Fokus: keyword panjang, banyak variasi, padat SEO")
-        prod_title = st.text_input("Nama Produk", key="seo_shopee")
-        keyword1 = st.text_input("Keyword Utama", placeholder="Contoh: kaos oversize pria", key="kw1")
-        keyword2 = st.text_input("Keyword Tambahan", placeholder="Contoh: bahan adem, kualitas premium", key="kw2")
+        prod_title = st.text_input("Nama Produk", key="seo_shopee_title")
+        keyword1 = st.text_input("Keyword Utama", placeholder="Contoh: kaos oversize pria", key="kw1_shopee")
+        keyword2 = st.text_input("Keyword Tambahan", placeholder="Contoh: bahan adem, kualitas premium", key="kw2_shopee")
         
-        if st.button("✨ Generate Judul SEO (Shopee)"):
+        if st.button("✨ Generate Judul SEO (Shopee)", key="gen_seo_shopee"):
             if generator_access():
                 if not is_premium():
                     inc_demo_generator()
@@ -483,25 +479,20 @@ if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
                         f"🎯 {prod_title} {keyword2} - Dijamin Nyaman Dipakai",
                         f"💎 {prod_title} PREMIUM QUALITY - Limited Stock!",
                         f"🛒 {prod_title} - 50% OFF Hari Ini! Buruan {keyword1}",
-                        f"⭐ {prod_title} - Review 4.9/5, Cobain Sendiri!",
-                        f"📦 {prod_title} - FREE ONGKIR Se-Indonesia!",
-                        f"🏆 {prod_title} - Rekomendasi #1 di Shopee",
-                        f"💝 {prod_title} - Kado Terbaik untuk Orang Tersayang"
+                        f"⭐ {prod_title} - Review 4.9/5, Cobain Sendiri!"
                     ]
-                    for t in titles[:7]:
+                    for t in titles:
                         st.markdown(f"- {t}")
-                    st.info("💡 Tips: Gunakan keyword panjang dan variasikan di setiap judul.")
                 else:
                     st.warning("Masukkan nama produk.")
     
     with tab2:
         st.markdown("### 📄 **Mode Shopee - Deskripsi Produk**")
-        st.caption("Fokus: SEO friendly, detail spesifikasi, manfaat")
-        prod_desc = st.text_input("Nama Produk", key="desc_shopee")
-        manfaat = st.text_area("Manfaat Produk", placeholder="Contoh: adem, nyaman, tidak panas, bahan tebal")
-        spesifikasi = st.text_area("Spesifikasi", placeholder="Contoh: Bahan Cotton Combed 30s, Size S-XXL")
+        prod_desc = st.text_input("Nama Produk", key="desc_shopee_prod")
+        manfaat = st.text_area("Manfaat Produk", placeholder="Contoh: adem, nyaman, tidak panas", key="manfaat_shopee")
+        spesifikasi = st.text_area("Spesifikasi", placeholder="Contoh: Bahan Cotton Combed 30s, Size S-XXL", key="spesifikasi_shopee")
         
-        if st.button("✨ Generate Deskripsi (Shopee)"):
+        if st.button("✨ Generate Deskripsi (Shopee)", key="gen_desc_shopee"):
             if generator_access():
                 if not is_premium():
                     inc_demo_generator()
@@ -520,8 +511,6 @@ if mode_generator == "🛍️ Mode Shopee (SEO Panjang)":
 {spesifikasi if spesifikasi else 'Bahan: Premium Quality, Size Lengkap'}
 
 🛒 ORDER SEKARANG JUGA!
-Klik tombol "Beli" atau chat admin.
-
 🔥 Promo Terbatas! Free ongkir + Diskon 10%!
 """
                     st.code(desc, language="markdown")
@@ -530,9 +519,8 @@ Klik tombol "Beli" atau chat admin.
     
     with tab3:
         st.markdown("### 🎬 **Mode Shopee - Hook Video**")
-        st.caption("Fokus: informatif, jelas, ajakan bertindak")
-        prod_hook = st.text_input("Nama Produk", key="hook_shopee")
-        if st.button("✨ Generate Hook (Shopee)"):
+        prod_hook = st.text_input("Nama Produk", key="hook_shopee_prod")
+        if st.button("✨ Generate Hook (Shopee)", key="gen_hook_shopee"):
             if generator_access():
                 if not is_premium():
                     inc_demo_generator()
@@ -541,23 +529,21 @@ Klik tombol "Beli" atau chat admin.
                         f"🛍️ {prod_hook} - Kualitas Premium Harga Terjangkau!",
                         f"📦 {prod_hook} - FREE ONGKIR Se-Indonesia!",
                         f"⭐ {prod_hook} - Rating 4.9/5, Yuk Cobain!",
-                        f"🔥 {prod_hook} - Diskon 50% Cuma Hari Ini!",
-                        f"✅ {prod_hook} - Dijamin Puas atau Uang Kembali!"
+                        f"🔥 {prod_hook} - Diskon 50% Cuma Hari Ini!"
                     ]
                     for h in hooks:
                         st.markdown(f"- 🎬 {h}")
                 else:
                     st.warning("Masukkan nama produk.")
 
-# ==================== MODE TIKTOK (Viral & Emosional) ====================
+# Mode TikTok
 else:
     with tab1:
         st.markdown("### 🎥 **Mode TikTok - Viral Title**")
-        st.caption("Fokus: kata 'viral', 'auto', 'wajib', pain + solusi, emosional")
-        prod_title = st.text_input("Nama Produk", key="seo_tiktok")
-        pain_point = st.text_input("Pain Point Customer", placeholder="Contoh: celana kekecitan, bahan panas", key="pain")
+        prod_title = st.text_input("Nama Produk", key="seo_tiktok_title")
+        pain_point = st.text_input("Pain Point Customer", placeholder="Contoh: celana kekecitan, bahan panas", key="pain_tiktok")
         
-        if st.button("✨ Generate Judul Viral (TikTok)"):
+        if st.button("✨ Generate Judul Viral (TikTok)", key="gen_seo_tiktok"):
             if generator_access():
                 if not is_premium():
                     inc_demo_generator()
@@ -569,24 +555,19 @@ else:
                         f"✨ {prod_title} yang bikin kamu auto glowing!",
                         f"🤯 {prod_title} ini SOLUSI buat kamu yang {pain_point if pain_point else 'punya masalah'}!",
                         f"🏆 {prod_title} BEST SELLER - 5000+ review 5 bintang!",
-                        f"💗 {prod_title} yang bikin kamu jatuh cinta!",
-                        f"⚡ GAK NYANGKA! {prod_title} sekeren ini!",
-                        f"🫣 Psst... rahasia {prod_title} akhirnya kebongkar!",
-                        f"🥺 Aku nangis lihat {prod_title} ini!"
+                        f"💗 {prod_title} yang bikin kamu jatuh cinta!"
                     ]
                     for t in titles:
                         st.markdown(f"- 🎥 {t}")
-                    st.info("💡 Tips: Gunakan emoji, huruf besar, dan kata 'viral'/'auto' untuk menarik perhatian.")
                 else:
                     st.warning("Masukkan nama produk.")
     
     with tab2:
         st.markdown("### 📄 **Mode TikTok - Deskripsi Emosional**")
-        st.caption("Fokus: storytelling, emosional, ajakan langsung")
-        prod_desc = st.text_input("Nama Produk", key="desc_tiktok")
-        cerita = st.text_area("Cerita / Manfaat", placeholder="Contoh: Dulu aku gak percaya diri...")
+        prod_desc = st.text_input("Nama Produk", key="desc_tiktok_prod")
+        cerita = st.text_area("Cerita / Manfaat", placeholder="Contoh: Dulu aku gak percaya diri...", key="cerita_tiktok")
         
-        if st.button("✨ Generate Deskripsi Emosional (TikTok)"):
+        if st.button("✨ Generate Deskripsi Emosional (TikTok)", key="gen_desc_tiktok"):
             if generator_access():
                 if not is_premium():
                     inc_demo_generator()
@@ -615,11 +596,10 @@ Klik link di bio sebelum kehabisan!
     
     with tab3:
         st.markdown("### 🎬 **Mode TikTok - Hook Video**")
-        st.caption("Fokus: 3 detik pertama yang bikin STOP SCROLL!")
-        prod_hook = st.text_input("Nama Produk", key="hook_tiktok")
-        hook_style = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"])
+        prod_hook = st.text_input("Nama Produk", key="hook_tiktok_prod")
+        hook_style = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="hook_style_tiktok")
         
-        if st.button("✨ Generate Hook Viral (TikTok)"):
+        if st.button("✨ Generate Hook Viral (TikTok)", key="gen_hook_tiktok"):
             if generator_access():
                 if not is_premium():
                     inc_demo_generator()
@@ -629,44 +609,34 @@ Klik link di bio sebelum kehabisan!
                             f"😫 Capek cari {prod_hook} yang nyaman? STOP!",
                             f"❌ Jangan beli {prod_hook} sebelum lihat video ini!",
                             f"🤯 Rahasia {prod_hook} yang gak pernah kamu tahu!",
-                            f"⚠️ 5 kesalahan fatal pas beli {prod_hook}!",
-                            f"💡 Cara pilih {prod_hook} yang bikin auto percaya diri!"
+                            f"⚠️ 5 kesalahan fatal pas beli {prod_hook}!"
                         ]
                     elif hook_style == "Diskon":
                         hooks = [
                             f"🔥 DISKON 50% {prod_hook} cuma hari ini!",
                             f"🎉 FREE ONGKIR {prod_hook} se-Indonesia!",
-                            f"💰 Harga {prod_hook} turun drastis! Buruan!",
-                            f"🎁 Beli 1 gratis 1 untuk {prod_hook} terbatas!",
-                            f"⚡ Stok {prod_hook} tinggal 10! Cepat checkout!"
+                            f"💰 Harga {prod_hook} turun drastis! Buruan!"
                         ]
                     elif hook_style == "Bukti Sosial":
                         hooks = [
                             f"🏆 {prod_hook} best seller dengan 5000+ review!",
                             f"⭐ 4.9/5 rating untuk {prod_hook}! Cobain sendiri!",
-                            f"📦 1000+ orang udah beli {prod_hook} minggu ini!",
-                            f"💬 Viral! {prod_hook} lagi di mana-mana!",
-                            f"👑 Rekomendasi #1 untuk {prod_hook} versi seleb TikTok!"
+                            f"📦 1000+ orang udah beli {prod_hook} minggu ini!"
                         ]
                     elif hook_style == "Curiosity":
                         hooks = [
                             f"🤔 Kenapa semua orang pake {prod_hook}?",
                             f"😱 Gak nyangka {prod_hook} sekeren ini!",
-                            f"🫣 Psst... rahasia {prod_hook} akhirnya kebongkar!",
-                            f"❓ Apa yang terjadi kalau kamu pake {prod_hook}?",
-                            f"👀 Wajib lihat! {prod_hook} versi terbaru!"
+                            f"🫣 Psst... rahasia {prod_hook} akhirnya kebongkar!"
                         ]
                     else:
                         hooks = [
                             f"🥺 Aku menangis lihat {prod_hook} ini!",
                             f"😍 Cinta pertama sama {prod_hook}!",
-                            f"💗 {prod_hook} yang bikin aku percaya diri!",
-                            f"🤗 Pelukan terbaik dari {prod_hook}!",
-                            f"✨ Hidup berubah setelah pake {prod_hook}!"
+                            f"💗 {prod_hook} yang bikin aku percaya diri!"
                         ]
                     for h in hooks:
                         st.markdown(f"- 🎬 {h}")
-                    st.info("💡 Tips: Gunakan teks besar & warna mencolok di 3 detik pertama!")
                 else:
                     st.warning("Masukkan nama produk.")
 
