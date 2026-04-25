@@ -20,12 +20,12 @@ st.set_page_config(
 hide_st_style = """
 <style>
 #MainMenu {visibility: hidden;}
-/* header {visibility: hidden;} */  /* DIHAPUS AGAR TOMBOL SIDEBAR MUNCUL */
+/* header {visibility: hidden;} */   /* ← DIKOMENTAR, BIAR TOMBOL SIDEBAR MUNCUL */
 footer {visibility: hidden;}
 .stAppDeployButton {display:none;}
 [data-testid="stToolbar"] {display:none;}
 
-/* SIDEBAR FULL HEIGHT - TANPA JARAK ATAS */
+/* MEMBUAT SIDEBAR FULL KE ATAS LAYAR */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
     border-right: 2px solid rgba(0, 229, 160, 0.3) !important;
@@ -39,6 +39,14 @@ footer {visibility: hidden;}
     padding-top: 0 !important;
     margin-top: 0 !important;
 }
+
+/* HILANGKAN JARAK DI ATAS */
+.st-emotion-cache-1cypcdb {
+    padding-top: 0 !important;
+}
+</style>
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 /* Mobile responsive */
 @media (max-width: 768px) {
