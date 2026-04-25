@@ -1,4 +1,17 @@
 import streamlit as st
+
+# Kode untuk menyembunyikan header dan toolbar
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            .stAppDeployButton {display:none;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
+import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
