@@ -20,12 +20,12 @@ st.set_page_config(
 hide_st_style = """
 <style>
 #MainMenu {visibility: hidden;}
-/* header {visibility: hidden;} */   /* ← DIKOMENTAR, BIAR TOMBOL SIDEBAR MUNCUL */
+/* header {visibility: hidden;} */  /* DIHAPUS AGAR TOMBOL SIDEBAR MUNCUL */
 footer {visibility: hidden;}
 .stAppDeployButton {display:none;}
 [data-testid="stToolbar"] {display:none;}
 
-/* MEMBUAT SIDEBAR FULL KE ATAS LAYAR */
+/* SIDEBAR FULL HEIGHT - TANPA JARAK ATAS */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
     border-right: 2px solid rgba(0, 229, 160, 0.3) !important;
@@ -39,14 +39,6 @@ footer {visibility: hidden;}
     padding-top: 0 !important;
     margin-top: 0 !important;
 }
-
-/* HILANGKAN JARAK DI ATAS */
-.st-emotion-cache-1cypcdb {
-    padding-top: 0 !important;
-}
-</style>
-"""
-st.markdown(hide_st_style, unsafe_allow_html=True)
 
 /* Mobile responsive */
 @media (max-width: 768px) {
@@ -898,7 +890,7 @@ Target: viral & engagement tinggi."""
     st.markdown('</div>', unsafe_allow_html=True)
 
 with tab4:
-    st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+    st.markdown('<div class="generator-card">, unsafe_allow_html=True)
     p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
     niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
     if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
