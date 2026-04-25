@@ -340,13 +340,13 @@ def format_rp(angka):
 
 # ==================== FUNGSI CALL GEMINI API (MODEL TERBARU) ====================
 def call_gemini_api(prompt):
-    """Panggil Gemini API via HTTP - PAKAI GEMINI 2.0 FLASH EXP"""
+    """Panggil Gemini API via HTTP - PAKAI GEMINI 2.5 FLASH (STABLE)"""
     if not GEMINI_API_KEY:
         st.session_state.api_error = "❌ API Key tidak ditemukan! Periksa secrets.toml"
         return None
     
-    # PAKAI MODEL GEMINI 2.0 FLASH EXP (PALING STABIL, TIDAK 404)
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-exp:generateContent?key={GEMINI_API_KEY}"
+    # PAKAI MODEL GEMINI 2.5 FLASH (STABLE GA, TIDAK DEPRECATED)
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     headers = {"Content-Type": "application/json"}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -370,7 +370,7 @@ def call_gemini_api(prompt):
             elif response.status_code == 429:
                 error_msg += " - Rate limit! Coba lagi nanti."
             elif response.status_code == 404:
-                error_msg += " - Model tidak ditemukan. Coba ganti model lain."
+                error_msg += " - Model tidak ditemukan. Pastikan model name benar."
             st.session_state.api_error = error_msg
             return None
             
