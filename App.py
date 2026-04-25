@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. CSS untuk menyembunyikan header default Streamlit (TAPI TOMBOL SIDEBAR TETAP ADA)
+# 2. CSS - TOMBOL SIDEBAR TETAP MUNCUL
 hide_st_style = """
 <style>
 #MainMenu {visibility: hidden;}
@@ -251,7 +251,7 @@ def apply_premium_style():
         margin-top: 20px;
     }
 
-    /* ============ TOMBOL SIDEBAR KONTRAK DAN TERLIHAT JELAS ============ */
+    /* ============ TOMBOL SIDEBAR KONTRAK ============ */
     button[kind="header"] {
         background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
         border-radius: 50% !important;
@@ -290,14 +290,6 @@ def apply_premium_style():
     [data-testid="stSidebarOverlay"] {
         background: rgba(0, 0, 0, 0.7) !important;
         backdrop-filter: blur(5px) !important;
-    }
-
-    /* Tooltip styling */
-    .tooltip-icon {
-        color: #00E5A0;
-        cursor: help;
-        margin-left: 5px;
-        font-size: 0.8rem;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -346,14 +338,15 @@ def format_rp(angka):
         return f"Rp{angka/1000:.0f}RB"
     return f"Rp{angka:,.0f}"
 
-# ==================== FUNGSI CALL GEMINI API (DENGAN ERROR DI HALAMAN UTAMA) ====================
+# ==================== FUNGSI CALL GEMINI API (MODEL TERBARU) ====================
 def call_gemini_api(prompt):
-    """Panggil Gemini API via HTTP - ERROR TAMPIL DI HALAMAN UTAMA"""
+    """Panggil Gemini API via HTTP - PAKAI GEMINI 2.0 FLASH EXP"""
     if not GEMINI_API_KEY:
         st.session_state.api_error = "❌ API Key tidak ditemukan! Periksa secrets.toml"
         return None
     
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # PAKAI MODEL GEMINI 2.0 FLASH EXP (PALING STABIL, TIDAK 404)
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-exp:generateContent?key={GEMINI_API_KEY}"
     
     headers = {"Content-Type": "application/json"}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -377,7 +370,7 @@ def call_gemini_api(prompt):
             elif response.status_code == 429:
                 error_msg += " - Rate limit! Coba lagi nanti."
             elif response.status_code == 404:
-                error_msg += " - Model tidak ditemukan."
+                error_msg += " - Model tidak ditemukan. Coba ganti model lain."
             st.session_state.api_error = error_msg
             return None
             
@@ -510,7 +503,6 @@ CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
 
 **Solusi AI:** 
 """
-        # Tambahan saran AI jika API tersedia
         if GEMINI_API_KEY:
             prompt_ctr = f"CTR iklan hanya {ctr:.1f}%. Berikan 3 saran singkat untuk meningkatkan CTR. Jawab dalam 30 kata."
             saran_ctr = call_gemini_api(prompt_ctr)
@@ -552,9 +544,9 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==================== 4. MAIN PREMIUM DASHBOARD ====================
-# Tampilkan error API di halaman utama jika ada
+# Tampilkan error API di halaman utama
 if st.session_state.api_error:
-    st.warning(f"{st.session_state.api_error}")
+    st.error(f"{st.session_state.api_error}")
 
 st.markdown('<h1 class="gold-header">🩺 ADVERTISING COMMAND CENTER</h1>', unsafe_allow_html=True)
 
@@ -587,10 +579,8 @@ with st.expander("📦 **Database Produk**", expanded=False):
     with col_prod2:
         st.markdown("### 📋 Produk Tersimpan")
         
-        # Search filter
         search_term = st.text_input("🔍 Cari produk", placeholder="Ketik nama produk...")
         
-        # Export/Import buttons
         col_exp, col_imp = st.columns(2)
         with col_exp:
             csv_data = export_products()
@@ -608,7 +598,6 @@ with st.expander("📦 **Database Produk**", expanded=False):
                     st.success("Import berhasil!")
                     st.rerun()
         
-        # Filter produk berdasarkan search
         filtered_products = st.session_state.products
         if search_term:
             filtered_products = [p for p in st.session_state.products if search_term.lower() in p["nama"].lower()]
@@ -637,7 +626,6 @@ with st.sidebar:
         st.session_state.clear()
         st.rerun()
     
-    # Tooltip / Onboarding
     with st.expander("ℹ️ Panduan Cepat", expanded=False):
         st.markdown("""
         **📌 Langkah Penggunaan:**
@@ -710,7 +698,6 @@ with col_btn2:
     analize_clicked = st.button("⚡ RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics")
 
 if analize_clicked:
-    # Validasi division by zero
     ctr_p = (clicks / impressions * 100) if impressions > 0 else 0
     roas_akt_p = (sales / budget_spent) if budget_spent > 0 else 0
     s_rate_p = (budget_spent / budget_set * 100) if budget_set > 0 else 0
