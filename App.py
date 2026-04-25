@@ -585,4 +585,629 @@ def render_dashboard():
             h_komp = st.number_input("Harga Kompetitor", min_value=1000, value=140000, key="harga_komp_main")
             if hj > h_komp * 1.2: 
                 st.warning("⚠️ Harga terlalu mahal.")
-            elif laba_kotor_p < 50
+            elif laba_kotor_p < 5000: 
+                st.error("❌ Margin terlalu tipis.")
+            else:
+                st.success("✅ Produk layak beriklan!")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Ad Performance Matrix
+    st.markdown('<div class="premium-card"><h3>📊 Ad Performance Matrix</h3>', unsafe_allow_html=True)
+    ip1, ip2, ip3 = st.columns(3)
+    impressions = ip1.number_input("👁️ Impressions", min_value=0, value=20000, key="imp_main")
+    clicks = ip1.number_input("🖱️ Clicks", min_value=0, value=600, key="clicks_main")
+    budget_spent = ip2.number_input("💸 Spent (Rp)", min_value=0, value=150000, key="spent_main")
+    sales = ip2.number_input("💰 Revenue (Rp)", min_value=0, value=900000, key="sales_main")
+    orders = ip3.number_input("📦 Orders", min_value=0, value=8, key="orders_main")
+    budget_set = ip3.number_input("Budget Setting (Rp)", min_value=0, value=200000, key="budget_set_main")
+    target_roas_p = st.number_input("🎯 Target ROAS", min_value=0.5, value=6.0, step=0.5, key="target_roas_main")
+    
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    with col_btn2:
+        analize_clicked = st.button("⚡ RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics")
+    
+    if analize_clicked:
+        ctr_p = (clicks / impressions * 100) if impressions > 0 else 0
+        roas_akt_p = (sales / budget_spent) if budget_spent > 0 else 0
+        s_rate_p = (budget_spent / budget_set * 100) if budget_set > 0 else 0
+        profit_est_p = (laba_kotor_p * orders) - budget_spent if orders > 0 else -budget_spent
+        
+        st.session_state.analysis_done = True
+        st.session_state.last_ctr = ctr_p
+        st.session_state.last_roas = roas_akt_p
+        st.session_state.last_roas_bep = roas_bep_p
+        st.session_state.last_s_rate = s_rate_p
+        st.session_state.last_clicks = clicks
+        st.session_state.last_orders = orders
+        st.session_state.last_profit = profit_est_p
+        st.session_state.last_budget_set = budget_set
+        st.session_state.last_budget_spent = budget_spent
+        st.session_state.last_target_roas = target_roas_p
+        
+        if profit_est_p > 0 and roas_akt_p >= roas_bep_p:
+            st.balloons()
+        
+        st.markdown('<div class="analytics-wrapper">', unsafe_allow_html=True)
+        
+        m1, m2, m3, m4 = st.columns(4)
+        with m1:
+            st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">📈 CTR</p><h2 style="color:#FFFFFF; margin:0;">{ctr_p:.2f}%</h2></div>', unsafe_allow_html=True)
+        with m2:
+            st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">💰 ROAS</p><h2 style="color:#00E5A0; margin:0;">{roas_akt_p:.2f}x</h2></div>', unsafe_allow_html=True)
+        with m3:
+            profit_color = "#00E5A0" if profit_est_p > 0 else "#FF6B6B"
+            st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">💎 PROFIT</p><h2 style="color:{profit_color}; margin:0;">{format_rp(profit_est_p)}</h2></div>', unsafe_allow_html=True)
+        with m4:
+            st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">🎯 BEP</p><h2 style="color:#FFFFFF; margin:0;">{roas_bep_p:.2f}x</h2></div>', unsafe_allow_html=True)
+        
+        st.markdown("### 🎯 Rekomendasi Strategis")
+        
+        rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna = generate_rekomendasi(
+            roas_akt_p, roas_bep_p, s_rate_p, clicks, orders, 
+            budget_set, target_roas_p, budget_spent, ctr_p
+        )
+        
+        if warna == "danger":
+            rekom_class = "rekom-danger"
+        elif warna == "warning":
+            rekom_class = "rekom-warning"
+        elif warna == "success":
+            rekom_class = "rekom-success"
+        else:
+            rekom_class = "rekom-info"
+        
+        st.markdown(f"""
+        <div class="{rekom_class}">
+            <h3 style="margin:0 0 10px 0;">{prioritas}</h3>
+            <p style="font-size:1rem; line-height:1.6;">{rekom_tindakan}</p>
+            <hr style="margin:15px 0;">
+            <p><strong>💰 Budget Rekomendasi:</strong> {format_rp(rekom_budget)} | <strong>🎯 Target ROAS:</strong> {rekom_roas:.1f}x</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Prediksi
+    if st.session_state.analysis_done and st.session_state.last_roas >= st.session_state.last_roas_bep * 1.2:
+        st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">📈 Prediksi Scale</h3>', unsafe_allow_html=True)
+        new_budget_pred = st.session_state.last_budget_set * 1.3
+        prediksi_profit = st.session_state.last_profit * 1.25
+        st.markdown(f"""
+        <div style="background:rgba(0,229,160,0.1); border-radius:16px; padding:1.5rem;">
+            <p><strong>💰 Budget 30%:</strong> {format_rp(new_budget_pred)}/hari</p>
+            <p><strong>💎 Estimasi Profit:</strong> {format_rp(prediksi_profit)}/hari</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ==================== HALAMAN GMV MAX (TIDAK DIUBAH) ====================
+def render_gmvmax():
+    st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">🚀 GMV MAX - Panduan Strategi Iklan untuk Pemula</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#94A3B8;">Panduan lengkap memahami algoritma GMV Max TikTok & Shopee</p>', unsafe_allow_html=True)
+    
+    with st.expander("⚙️ 1. STRUKTUR DASAR ALGORITMA (INPUT-PROCESS-OUTPUT)", expanded=False):
+        st.markdown("""
+        **GMV Max bekerja pakai 3 layer utama:**
+        
+        **📥 INPUT** (yang kamu kasih ke sistem)
+        - Budget
+        - Target ROAS / ROI
+        - Produk (harga, margin)
+        - Konten / listing (CTR & CVR)
+        - Data pixel (event pembelian)
+        
+        **⚙️ PROCESS** (yang sistem lakukan)
+        - Distribusi iklan ke banyak audience
+        - Mengukur respon: CTR (klik), CVR (beli), CPA (biaya per order)
+        - Membandingkan dengan target ROAS
+        
+        **📤 OUTPUT** (hasil akhir)
+        - Spend terserap / tidak
+        - Order masuk / tidak
+        - ROAS naik / turun
+        
+        > 🔥 **Intinya:** GMV Max = sistem probabilitas pembeli, bukan targeting manual
+        """)
+    
+    with st.expander("🧠 2. LOGIKA INTI ALGORITMA (CTR, CVR, CPA)", expanded=False):
+        st.markdown("""
+        **Cara AI mikir:** "Dari semua orang yang lihat iklan ini, siapa yang paling mungkin beli dengan biaya murah?"
+        
+        **Algoritma pakai 3 sinyal utama:**
+        
+        | Sinyal | Fungsi |
+        |--------|--------|
+        | **CTR** | "Apakah orang tertarik?" → Tinggi = disebar luas / Rendah = dipersempit |
+        | **CVR** | "Apakah orang beli?" → Klik tinggi tapi gak beli = produk lemah |
+        | **CPA** | "Berapa biaya dapetin 1 order?" → **INI YANG PALING PENTING** |
+        
+        > 🔥 **Rumus dalam kepala algoritma:** Profit ≈ Revenue – Cost
+        """)
+    
+    with st.expander("🎯 3. PERAN ROAS DI DALAM ALGORITMA", expanded=False):
+        st.markdown("""
+        **Banyak orang salah kaprah!** ROAS itu bukan target profit, tapi **constraint (batasan sistem)**.
+        
+        | Setting ROAS | Perilaku Algoritma |
+        |--------------|-------------------|
+        | **Tinggi** | Cari buyer yang "paling pasti beli" → traffic kecil tapi mahal |
+        | **Rendah** | Lebih agresif → traffic luas tapi risk tinggi |
+        
+        > 🔥 **Kesimpulan:** ROAS = filter kualitas traffic
+        """)
+    
+    with st.expander("💸 4. HUBUNGAN ROAS vs BUDGET", expanded=False):
+        st.markdown("""
+        | Setting | Respon Algoritma |
+        |---------|------------------|
+        | ROAS tinggi | selektif |
+        | ROAS rendah | eksplorasi |
+        | Budget besar | butuh audience luas |
+        | Budget kecil | distribusi terbatas |
+        
+        > 🔥 **Insight:** Budget besar + ROAS tinggi = sistem "bingung" (gak bisa spend)
+        """)
+    
+    with st.expander("🔄 5. LEARNING PHASE", expanded=False):
+        st.markdown("""
+        **Syarat stabil sistem:**
+        - Conversion cukup (±30–50)
+        - Tidak sering diubah
+        - Budget cukup untuk sampling
+        
+        **❌ Jangan ganggu:** Edit ROAS, ganti budget drastis, pause terlalu cepat → Model reset!
+        """)
+    
+    with st.expander("🧪 6. OPTIMISASI OTOMATIS", expanded=False):
+        st.markdown("""
+        Setelah learning, sistem masuk fase **EXPLOIT MODE**:
+        - Fokus ke audience paling profitable
+        - Naikkan distribusi ke segmen itu
+        - Kurangi yang tidak perform
+        
+        > 🔥 **Ini yang disebut:** "Scaling otomatis oleh AI"
+        """)
+    
+    with st.expander("📉 7. KENAPA IKLAN BISA DROP?", expanded=False):
+        st.markdown("""
+        | Penyebab | Penjelasan |
+        |----------|------------|
+        | Audience fatigue | Jenuh |
+        | Kompetitor naik | Auction lebih mahal |
+        | Data berubah | Buyer behavior berubah |
+        """)
+    
+    with st.expander("🧠 8. HUBUNGAN PRODUK DENGAN ALGORITMA", expanded=False):
+        st.markdown("""
+        Algoritma **TIDAK bisa menyelamatkan produk jelek**.
+        
+        > 🔥 **Jadi:** Produk = bahan bakar, Algoritma = mesin. Kalau bahan bakar jelek → mesin gak jalan
+        """)
+    
+    with st.expander("🎯 9. FLOW KERJA ALGORITMA", expanded=False):
+        st.markdown("""
+        1. Iklan jalan
+        2. Sistem tes audience
+        3. Ukur CTR → tertarik?
+        4. Ukur CVR → beli?
+        5. Hitung CPA
+        6. Bandingkan dengan target ROAS
+        7. Kalau cocok → scale / Kalau tidak → stop
+        """)
+    
+    with st.expander("🔥 10. RUMUS BESAR GMV MAX", expanded=False):
+        st.markdown("""
+        ```
+        Profit = (CTR × CVR × AOV) – CPA
+        ```
+        > **Sistem menyederhanakan:** "Apakah ROAS tercapai?"
+        """)
+    
+    with st.expander("⚠️ 11. KESALAHAN YANG SERING TERJADI", expanded=False):
+        st.markdown("""
+        | ❌ Kesalahan | ✅ Yang Benar |
+        |--------------|---------------|
+        | Terlalu sering edit | Biarkan belajar (3-5 hari) |
+        | Fokus ROAS tinggi dari awal | Mulai dengan ROAS sedang |
+        | Budget terlalu kecil | Pastikan cukup untuk sampling |
+        | Produk belum valid | Validasi produk dulu |
+        """)
+    
+    with st.expander("🔥 12. KESIMPULAN BESAR", expanded=False):
+        st.markdown("""
+        **3 kontrol utama kamu:**
+        - **ROAS** → arahkan kualitas
+        - **Budget** → atur volume
+        - **Produk & konten** → tentukan hasil
+        """)
+    
+    st.markdown("""
+    <div class="gmv-quote">
+    💡 <strong>Inti Satu Kalimat:</strong><br>
+    GMV Max adalah sistem distribusi traffic berbasis probabilitas pembelian yang dikontrol oleh constraint ROAS dan diberi makan oleh data CTR & CVR.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==================== HALAMAN GENERATOR (TIDAK DIUBAH) ====================
+def render_generator():
+    st.markdown("<h2 class='gold-header'>✨ Elite Copywriter Lab</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#94A3B8; margin-bottom:20px;'>Copywriting profesional ala ahli advertising 10 tahun</p>", unsafe_allow_html=True)
+    
+    # SEO TITLE
+    with st.container():
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### 📝 SEO Title")
+        p_name = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="seo_name")
+        if st.button("✨ Generate SEO Title", key="gen_seo", use_container_width=True):
+            with st.spinner("🧠 AI copywriter sedang merancang judul..."):
+                if p_name:
+                    prompt = f"""Buat 5 judul produk untuk '{p_name}' dengan formula: [Nama] + [Kategori] + [Atribut] + [Manfaat]. 
+Tambahkan emoji di awal. Maksimal 70 karakter. Output 5 judul satu per baris."""
+                    res = call_gemini_api(prompt)
+                    if res:
+                        st.code(res, language="text")
+                    else:
+                        st.code(f"🔥 {p_name} | Fashion | Premium Quality | Best Seller", language="text")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # DESKRIPSI
+    with st.container():
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### 📄 Deskripsi Produk")
+        p_name_desc = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="desc_name")
+        manfaat = st.text_area("Manfaat (pisahkan koma)", placeholder="Contoh: adem, nyaman, tidak panas", key="manfaat_desc")
+        if st.button("✨ Generate Deskripsi", key="gen_desc", use_container_width=True):
+            with st.spinner("🧠 AI copywriter sedang menulis deskripsi..."):
+                if p_name_desc:
+                    prompt = f"""Buat deskripsi produk untuk '{p_name_desc}'. Manfaat: {manfaat}. 
+Gunakan hook di awal, bullet points, CTA kuat. Maksimal 300 karakter."""
+                    res = call_gemini_api(prompt)
+                    if res:
+                        st.code(res, language="markdown")
+                    else:
+                        st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}", language="markdown")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # HOOK VIDEO
+    with st.container():
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### 🎬 Hook Video")
+        p_name_hook = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hook_name")
+        gaya = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="gaya_hook")
+        if st.button("✨ Generate Hook Video", key="gen_hook", use_container_width=True):
+            with st.spinner("🧠 AI creative director sedang membuat hook..."):
+                if p_name_hook:
+                    prompt = f"""Buat 5 hook 3 detik untuk produk '{p_name_hook}' gaya {gaya}. 
+Maksimal 10 kata per hook. Output satu per baris."""
+                    res = call_gemini_api(prompt)
+                    if res:
+                        for line in res.strip().split('\n'):
+                            if line.strip():
+                                st.markdown(f"- 🎬 {line.strip()}")
+                    else:
+                        st.markdown(f"- 🎬 😫 Capek cari {p_name_hook}? STOP!")
+                        st.markdown(f"- 🎬 🔥 DISKON 50% {p_name_hook}!")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # HASHTAG
+    with st.container():
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### #️⃣ Hashtag Viral")
+        p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
+        niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
+        if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
+            with st.spinner("🧠 AI trend analyst sedang meracik hashtag..."):
+                if p_name_hash:
+                    prompt = f"""Buat 20 hashtag untuk produk '{p_name_hash}', niche {niche_hash}.
+Kombinasi trending, niche, broad, event. Output satu baris dipisah spasi."""
+                    res = call_gemini_api(prompt)
+                    if res:
+                        st.code(res, language="text")
+                    else:
+                        st.code("#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon", language="text")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ==================== HALAMAN DATABASE (TIDAK DIUBAH) ====================
+def render_database():
+    with st.expander("📦 **Database Produk**", expanded=True):
+        col_prod1, col_prod2 = st.columns([1, 1])
+        
+        with col_prod1:
+            st.markdown("### ➕ Simpan Produk Baru")
+            nama_produk_db = st.text_input("Nama Produk", placeholder="Contoh: Kaos Premium", key="nama_produk_dash")
+            hj_db = st.number_input("Harga Jual (Rp)", min_value=1000, value=100000, key="hj_dash")
+            modal_db = st.number_input("Modal (Rp)", min_value=500, value=60000, key="modal_dash")
+            admin_db = st.slider("Admin Platform %", 5, 30, 20, key="admin_dash")
+            
+            if st.button("💾 Simpan ke Database", key="simpan_dash") and nama_produk_db:
+                admin_nom = hj_db * admin_db / 100
+                laba_db = hj_db - modal_db - admin_nom
+                roas_db = hj_db / laba_db if laba_db > 0 else 999
+                save_product({
+                    "nama": nama_produk_db, 
+                    "harga_jual": hj_db, 
+                    "modal": modal_db, 
+                    "admin_persen": admin_db, 
+                    "laba_kotor": laba_db, 
+                    "roas_bep": roas_db
+                })
+                st.success(f"✅ {nama_produk_db} tersimpan!")
+                st.rerun()
+        
+        with col_prod2:
+            st.markdown("### 📋 Produk Tersimpan")
+            
+            search_term = st.text_input("🔍 Cari produk", placeholder="Ketik nama produk...")
+            
+            col_exp, col_imp = st.columns(2)
+            with col_exp:
+                csv_data = export_products()
+                if csv_data:
+                    st.download_button(
+                        label="📥 Export CSV",
+                        data=csv_data,
+                        file_name="produk_database.csv",
+                        mime="text/csv"
+                    )
+            with col_imp:
+                uploaded_file = st.file_uploader("📤 Import CSV", type="csv")
+                if uploaded_file:
+                    if import_products(uploaded_file):
+                        st.success("Import berhasil!")
+                        st.rerun()
+            
+            filtered_products = st.session_state.products
+            if search_term:
+                filtered_products = [p for p in st.session_state.products if search_term.lower() in p["nama"].lower()]
+            
+            if filtered_products:
+                for idx, prod in enumerate(filtered_products):
+                    col_a, col_b = st.columns([3, 1])
+                    with col_a:
+                        st.markdown(f"**{prod['nama']}**  \nBEP: {prod['roas_bep']:.1f}x | Profit: Rp{prod['laba_kotor']:,.0f}")
+                    with col_b:
+                        if st.button("🗑️", key=f"hapus_{idx}"):
+                            delete_product(prod['nama'])
+                            st.rerun()
+                    st.markdown("---")
+            else:
+                if search_term:
+                    st.info(f"Tidak ada produk dengan nama '{search_term}'")
+                else:
+                    st.info("Belum ada produk tersimpan.")
+
+# ==================== HALAMAN EXECUTIVE DASHBOARD (BARU) ====================
+def render_executive():
+    st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">👑 EXECUTIVE DASHBOARD</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#94A3B8;">Upload file CSV/Excel untuk analisis massal dan ringkasan eksekutif</p>', unsafe_allow_html=True)
+    
+    # Download template CSV
+    template_df = pd.DataFrame({
+        'nama_produk': ['Kaos Premium', 'Jaket Parka'],
+        'harga_jual': [150000, 250000],
+        'modal': [75000, 120000],
+        'admin_persen': [20, 20],
+        'impressions': [20000, 15000],
+        'clicks': [600, 400],
+        'budget_spent': [150000, 120000],
+        'sales': [900000, 720000],
+        'orders': [8, 6],
+        'budget_set': [200000, 180000],
+        'target_roas': [6.0, 5.0]
+    })
+    
+    col_template, _ = st.columns([1, 2])
+    with col_template:
+        csv_template = template_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Template CSV",
+            data=csv_template,
+            file_name="template_analisis.csv",
+            mime="text/csv"
+        )
+    
+    st.markdown("---")
+    
+    # Upload file
+    uploaded_file = st.file_uploader(
+        "📁 Upload File CSV atau Excel",
+        type=['csv', 'xlsx', 'xls'],
+        help="Upload file dengan kolom: nama_produk, impressions, clicks, budget_spent, sales, orders, budget_set, target_roas"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Baca file
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            
+            st.success(f"✅ File berhasil diupload! {len(df)} produk ditemukan.")
+            
+            # Preview data
+            with st.expander("📋 Preview Data (5 baris pertama)", expanded=False):
+                st.dataframe(df.head(), use_container_width=True)
+            
+            # Tombol analisis
+            if st.button("⚡ ANALYZE ALL PRODUCTS", use_container_width=True):
+                with st.spinner(f"📊 Menganalisis {len(df)} produk..."):
+                    results = []
+                    for _, row in df.iterrows():
+                        result = analyze_batch_product(row)
+                        if result:
+                            results.append(result)
+                    
+                    st.session_state.executive_results = results
+                    st.success(f"✅ Analisis selesai! {len(results)} produk berhasil dianalisis.")
+                    st.rerun()
+            
+            # Tampilkan hasil jika ada
+            if st.session_state.executive_results:
+                results = st.session_state.executive_results
+                
+                # Kategorisasi produk
+                scale_products = [r for r in results if "SIAP SCALE" in r['prioritas']]
+                optimasi_products = [r for r in results if "OPTIMASI" in r['prioritas']]
+                rugi_products = [r for r in results if "RUGI" in r['prioritas']]
+                stop_products = [r for r in results if "STOP" in r['prioritas']]
+                
+                # ========== RINGKASAN EKSEKUTIF ==========
+                st.markdown("---")
+                st.markdown("### 📊 RINGKASAN EKSEKUTIF")
+                
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.markdown(f"""
+                    <div class="executive-stat">
+                        <h3 style="margin:0; color:#00E5A0;">{len(scale_products)}</h3>
+                        <p style="margin:0;">🚀 SIAP SCALE</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col2:
+                    st.markdown(f"""
+                    <div class="executive-stat">
+                        <h3 style="margin:0; color:#F59E0B;">{len(optimasi_products)}</h3>
+                        <p style="margin:0;">⚡ OPTIMASI</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col3:
+                    st.markdown(f"""
+                    <div class="executive-stat">
+                        <h3 style="margin:0; color:#EF4444;">{len(rugi_products)}</h3>
+                        <p style="margin:0;">🔴 RUGI</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col4:
+                    st.markdown(f"""
+                    <div class="executive-stat">
+                        <h3 style="margin:0; color:#EF4444;">{len(stop_products)}</h3>
+                        <p style="margin:0;">🛑 STOP IKLAN</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # ========== TOP 3 SIAP SCALE ==========
+                if scale_products:
+                    st.markdown("### 🏆 TOP 3 PRODUK SIAP SCALE")
+                    for i, prod in enumerate(scale_products[:3]):
+                        profit_text = format_rp(prod['profit']) if prod['profit'] > 0 else format_rp(prod['profit'])
+                        st.markdown(f"""
+                        <div class="executive-card">
+                            <strong>{i+1}. {prod['nama_produk']}</strong><br>
+                            📈 ROAS: {prod['roas_aktual']:.1f}x ≥ BEP {prod['roas_bep']:.1f}x<br>
+                            💰 Profit: {profit_text}<br>
+                            💡 Rekomendasi: {prod['rekomendasi']}
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # ========== PRIORITAS OPTIMASI ==========
+                if optimasi_products:
+                    st.markdown("### ⚠️ PRIORITAS OPTIMASI")
+                    for prod in optimasi_products[:5]:
+                        st.markdown(f"""
+                        <div class="executive-card" style="border-left-color: #F59E0B;">
+                            • <strong>{prod['nama_produk']}</strong><br>
+                            ROAS {prod['roas_aktual']:.1f}x ≥ BEP {prod['roas_bep']:.1f}x | Budget terserap {prod['s_rate']:.0f}%<br>
+                            💡 {prod['rekomendasi']}
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # ========== URGENT STOP IKLAN ==========
+                if stop_products:
+                    st.markdown("### 🔴 URGENT STOP IKLAN")
+                    for prod in stop_products:
+                        st.markdown(f"""
+                        <div class="executive-card" style="border-left-color: #EF4444;">
+                            • <strong>{prod['nama_produk']}</strong><br>
+                            {prod['clicks']:.0f} klik tapi {prod['orders']:.0f} order | Budget terserap {prod['s_rate']:.0f}%<br>
+                            💡 {prod['rekomendasi']}
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # ========== TOTAL POTENSI PROFIT ==========
+                total_profit_scale = sum([p['profit'] for p in scale_products if p['profit'] > 0])
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%); border-radius: 20px; padding: 25px; text-align: center; margin: 20px 0;">
+                    <h3 style="margin:0; color:#FFD700;">💰 TOTAL POTENSI PROFIT (jika scale semua)</h3>
+                    <h1 style="font-size: 3rem; margin: 10px 0; color: #00E5A0;">{format_rp(total_profit_scale)} / HARI</h1>
+                    <p style="margin:0;">Dari {len(scale_products)} produk yang siap scale</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # ========== TABEL DETAIL SEMUA PRODUK ==========
+                st.markdown("### 📋 DETAIL SEMUA PRODUK")
+                detail_df = pd.DataFrame([{
+                    'Nama Produk': r['nama_produk'],
+                    'CTR': f"{r['ctr']:.1f}%",
+                    'ROAS': f"{r['roas_aktual']:.1f}x",
+                    'BEP': f"{r['roas_bep']:.1f}x",
+                    'Profit': format_rp(r['profit']),
+                    'Rekomendasi': r['prioritas']
+                } for r in results])
+                st.dataframe(detail_df, use_container_width=True)
+                
+                # ========== EXPORT HASIL ==========
+                export_df = pd.DataFrame([{
+                    'nama_produk': r['nama_produk'],
+                    'ctr_%': round(r['ctr'], 2),
+                    'roas_aktual': round(r['roas_aktual'], 2),
+                    'roas_bep': round(r['roas_bep'], 2),
+                    'profit': r['profit'],
+                    'rekomendasi_prioritas': r['prioritas'],
+                    'rekomendasi_text': r['rekomendasi'],
+                    'rekomendasi_budget': r['rekom_budget'],
+                    'rekomendasi_target_roas': r['rekom_roas']
+                } for r in results])
+                
+                csv_export = export_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Download Hasil Analisis (CSV)",
+                    data=csv_export,
+                    file_name=f"hasil_analisis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+                
+        except Exception as e:
+            st.error(f"❌ Gagal membaca file: {e}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==================== RENDER PAGE ====================
+if st.session_state.current_page == "dashboard":
+    render_dashboard()
+elif st.session_state.current_page == "gmvmax":
+    render_gmvmax()
+elif st.session_state.current_page == "generator":
+    render_generator()
+elif st.session_state.current_page == "database":
+    render_database()
+elif st.session_state.current_page == "executive":
+    render_executive()
+
+# ==================== FOOTER ====================
+st.markdown("""
+<div class="custom-footer">
+    <p style="color: #94A3B8; font-size: 0.8rem;">
+        Powered by <span style="color: #00E5A0; font-weight: bold;">Arkidigital</span> © 2025
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("🚪 LOGOUT", key="logout_footer", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
