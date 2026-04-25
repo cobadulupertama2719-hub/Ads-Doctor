@@ -6,6 +6,7 @@ import hashlib
 import requests
 import json
 import io
+import time
 
 # 1. SET PAGE CONFIG (SIDEBAR EXPANDED)
 st.set_page_config(
@@ -15,19 +16,34 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. CSS - TOMBOL SIDEBAR TETAP MUNCUL
+# 2. CSS - TOMBOL SIDEBAR TETAP MUNCUL & SIDEBAR FULL HEIGHT
 hide_st_style = """
 <style>
 #MainMenu {visibility: hidden;}
-/* header {visibility: hidden;} */  /* ← DIHAPUS AGAR TOMBOL SIDEBAR MUNCUL */
+/* header {visibility: hidden;} */  /* DIHAPUS AGAR TOMBOL SIDEBAR MUNCUL */
 footer {visibility: hidden;}
 .stAppDeployButton {display:none;}
 [data-testid="stToolbar"] {display:none;}
 
+/* SIDEBAR FULL HEIGHT - TANPA JARAK ATAS */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
+    border-right: 2px solid rgba(0, 229, 160, 0.3) !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    top: 0 !important;
+    height: 100vh !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .premium-card { padding: 15px !important; }
-    .gold-header { font-size: 1.8rem !important; }
+    .gold-header { font-size: 1.5rem !important; }
     .stButton button { font-size: 0.9rem !important; }
 }
 </style>
@@ -281,16 +297,6 @@ def apply_premium_style():
         width: 24px !important;
         height: 24px !important;
     }
-
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
-        border-right: 2px solid rgba(0, 229, 160, 0.3) !important;
-    }
-
-    [data-testid="stSidebarOverlay"] {
-        background: rgba(0, 0, 0, 0.7) !important;
-        backdrop-filter: blur(5px) !important;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -325,6 +331,8 @@ if "last_budget_spent" not in st.session_state:
     st.session_state["last_budget_spent"] = 0
 if "api_error" not in st.session_state:
     st.session_state["api_error"] = None
+if "show_balloons" not in st.session_state:
+    st.session_state["show_balloons"] = False
 
 ADMIN_USERNAME = st.secrets.get("ADMIN_USERNAME", "arkidigital")
 ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "Arkidigital2026")
@@ -338,21 +346,21 @@ def format_rp(angka):
         return f"Rp{angka/1000:.0f}RB"
     return f"Rp{angka:,.0f}"
 
-# ==================== FUNGSI CALL GEMINI API (MODEL TERBARU) ====================
+# ==================== FUNGSI CALL GEMINI API (OPTIMISASI UNTUK GENERATOR) ====================
 def call_gemini_api(prompt):
-    """Panggil Gemini API via HTTP - PAKAI GEMINI 2.5 FLASH (STABLE)"""
+    """Panggil Gemini API - KHUSUS UNTUK GENERATOR (SEO, DESKRIPSI, HOOK, HASHTAG)"""
     if not GEMINI_API_KEY:
         st.session_state.api_error = "❌ API Key tidak ditemukan! Periksa secrets.toml"
         return None
     
-    # PAKAI MODEL GEMINI 2.5 FLASH (STABLE GA, TIDAK DEPRECATED)
+    # PAKAI MODEL GEMINI 2.5 FLASH (STABLE)
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     headers = {"Content-Type": "application/json"}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
     
     try:
-        response = requests.post(url, json=data, headers=headers, timeout=30)
+        response = requests.post(url, json=data, headers=headers, timeout=60)
         
         if response.status_code == 200:
             result = response.json()
@@ -365,17 +373,13 @@ def call_gemini_api(prompt):
                 return None
         else:
             error_msg = f"⚠️ API Error {response.status_code}"
-            if response.status_code == 403:
-                error_msg += " - API Key tidak valid atau expired!"
-            elif response.status_code == 429:
-                error_msg += " - Rate limit! Coba lagi nanti."
-            elif response.status_code == 404:
-                error_msg += " - Model tidak ditemukan. Pastikan model name benar."
+            if response.status_code == 503:
+                error_msg = "⚠️ Server sibuk, coba lagi nanti."
             st.session_state.api_error = error_msg
             return None
             
     except requests.exceptions.Timeout:
-        st.session_state.api_error = "⏰ Timeout! API terlalu lama merespon (30 detik)"
+        st.session_state.api_error = "⏰ Timeout! Coba lagi nanti."
         return None
     except Exception as e:
         st.session_state.api_error = f"⚠️ Error: {str(e)[:100]}"
@@ -501,17 +505,7 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
 
-**Solusi AI:** 
-"""
-        if GEMINI_API_KEY:
-            prompt_ctr = f"CTR iklan hanya {ctr:.1f}%. Berikan 3 saran singkat untuk meningkatkan CTR. Jawab dalam 30 kata."
-            saran_ctr = call_gemini_api(prompt_ctr)
-            if saran_ctr:
-                rekom_tindakan += f"\n💡 {saran_ctr}\n"
-            else:
-                rekom_tindakan += "Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."
-        else:
-            rekom_tindakan += "Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."
+**Solusi:** Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
     
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
@@ -544,11 +538,16 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==================== 4. MAIN PREMIUM DASHBOARD ====================
-# Tampilkan error API di halaman utama
 if st.session_state.api_error:
     st.error(f"{st.session_state.api_error}")
 
-st.markdown('<h1 class="gold-header">🩺 ADVERTISING COMMAND CENTER</h1>', unsafe_allow_html=True)
+# HEADER DENGAN BRANDING ARKIDIGITAL
+st.markdown("""
+<div style="text-align: center; margin-bottom: 20px;">
+    <h1 class="gold-header" style="font-size: 2.5rem; margin-bottom: 0;">🩺 ADVERTISING COMMAND CENTER</h1>
+    <p style="color: #00E5A0; font-size: 0.9rem; letter-spacing: 2px; margin-top: 5px;">Powered by Arkidigital</p>
+</div>
+""", unsafe_allow_html=True)
 
 # ==================== PRODUK DATABASE DI DASHBOARD UTAMA ====================
 with st.expander("📦 **Database Produk**", expanded=False):
@@ -618,9 +617,9 @@ with st.expander("📦 **Database Produk**", expanded=False):
             else:
                 st.info("Belum ada produk tersimpan. Silakan tambah produk baru.")
 
-# ==================== SIDEBAR (MINIMAL) ====================
+# ==================== SIDEBAR (FULL HEIGHT) ====================
 with st.sidebar:
-    st.markdown('<div style="text-align:center; background:rgba(0,229,160,0.2); padding:10px; border-radius:40px; margin-bottom:20px;"><span style="color:#00E5A0;">⭐ PREMIUM MEMBER ⭐</span></div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align:center; background:rgba(0,229,160,0.2); padding:15px; border-radius:40px; margin-bottom:20px; margin-top:0;"><span style="color:#00E5A0; font-weight:bold;">⭐ PREMIUM MEMBER ⭐</span></div>', unsafe_allow_html=True)
     
     if st.button("🚪 LOGOUT", use_container_width=True):
         st.session_state.clear()
@@ -635,8 +634,7 @@ with st.sidebar:
         4. Lihat rekomendasi strategis
         
         **🎯 Fitur Lain:**
-        - 💬 Tanya AI untuk konsultasi
-        - ✨ Generator copywriting
+        - ✨ Generator copywriting untuk SEO & konten
         - 📦 Database produk
         """)
 
@@ -678,8 +676,6 @@ with col_audit:
             st.error("❌ Margin terlalu tipis. Cari produk lain atau naikkan harga.")
         else:
             st.success("✅ Produk layak beriklan!")
-            if laba_kotor_p > 20000:
-                st.balloons()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== ANALISIS IKLAN ====================
@@ -715,6 +711,10 @@ if analize_clicked:
     st.session_state.last_budget_spent = budget_spent
     st.session_state.last_target_roas = target_roas_p
     
+    # BALON TERBANG HANYA JIKA PROFIT
+    if profit_est_p > 0 and roas_akt_p >= roas_bep_p:
+        st.balloons()
+    
     st.markdown('<div class="analytics-wrapper">', unsafe_allow_html=True)
     
     m1, m2, m3, m4 = st.columns(4)
@@ -727,24 +727,6 @@ if analize_clicked:
         st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">💎 PROFIT</p><h2 style="color:{profit_color}; margin:0;">{format_rp(profit_est_p)}</h2><p style="color:#94A3B8; font-size:0.8rem;">{"Untung" if profit_est_p > 0 else "Rugi"}</p></div>', unsafe_allow_html=True)
     with m4:
         st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">🎯 BEP</p><h2 style="color:#FFFFFF; margin:0;">{roas_bep_p:.2f}x</h2><p style="color:#94A3B8; font-size:0.8rem;">{"✅ Aman" if roas_akt_p >= roas_bep_p else "⚠️ Dibawah"}</p></div>', unsafe_allow_html=True)
-    
-    if GEMINI_API_KEY:
-        with st.spinner("🤖 AI sedang menganalisis..."):
-            summary_prompt = f"""Berdasarkan data iklan:
-- CTR: {ctr_p:.1f}%
-- ROAS: {roas_akt_p:.1f}x
-- BEP: {roas_bep_p:.1f}x
-- Budget terserap: {s_rate_p:.0f}%
-- Order: {orders} dari {clicks} klik
-- Profit: {format_rp(profit_est_p)}
-
-Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah iklan UNTUNG atau RUGI, dan rekomendasi singkat.
-"""
-            ai_summary = call_gemini_api(summary_prompt)
-            if ai_summary:
-                st.markdown(f'<div class="premium-card"><h3 style="color:#FFD700;">🤖 AI Insight</h3><p style="font-size:1rem;">{ai_summary}</p></div>', unsafe_allow_html=True)
-    else:
-        st.info("💡 Tips: Tambahkan GEMINI_API_KEY di secrets untuk mendapatkan analisis AI.")
     
     st.markdown("### 🎯 Rekomendasi Strategis")
     
@@ -832,39 +814,25 @@ if st.session_state.analysis_done and st.session_state.last_roas > 0:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== TANYA JAWAB AI ====================
-st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">💬 Tanya AI (Konsultasi Iklan)</h3>', unsafe_allow_html=True)
-user_question = st.text_input("Pertanyaan kamu:", placeholder="Contoh: ROAS saya turun drastis, harus gimana?", key="chatbot_question")
-if st.button("🤖 Tanya AI", use_container_width=True, key="ask_ai"):
-    if user_question:
-        with st.spinner("AI sedang berpikir..."):
-            prompt = f"""Anda adalah pakar iklan TikTok & Shopee. Jawab pertanyaan seller pemula ini dengan singkat (maks 100 kata) dan mudah dipahami.
-
-Pertanyaan: {user_question}
-
-Jawab dengan bahasa Indonesia yang ramah, profesional, dan berikan solusi praktis.
-"""
-            answer = call_gemini_api(prompt)
-            if answer:
-                st.info(f"💡 {answer}")
-            else:
-                st.warning("Maaf, AI sedang sibuk. Coba lagi nanti.")
-    else:
-        st.warning("Masukkan pertanyaan dulu.")
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ==================== GENERATOR ====================
+# ==================== GENERATOR (AI OPTIMAL) ====================
 st.markdown("<h2 class='gold-header'>✨ Elite Copywriter Lab</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#94A3B8; margin-bottom:20px;'>Copywriting profesional ala ahli advertising 10 tahun</p>", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook Video", "#️⃣ Hashtag"])
 
 with tab1:
     st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="seo_name")
-    if st.button("✨ Generate Elite SEO Title", key="gen_seo", use_container_width=True):
-        with st.spinner("🧠 AI sedang merancang judul..."):
+    if st.button("✨ Generate SEO Title", key="gen_seo", use_container_width=True):
+        with st.spinner("🧠 AI copywriter senior sedang merancang judul..."):
             if p_name:
-                res = call_gemini_api(f"Buat 5 judul untuk '{p_name}' di Shopee. Judul menarik, ada emoji, fokus manfaat. Output per baris.")
+                prompt = f"""Kamu adalah copywriter senior dengan pengalaman 10 tahun di TikTok Shop & Shopee. 
+Buat 5 judul produk untuk '{p_name}'.
+Format: [emoji] + kata kunci utama + manfaat utama + urgency/FPOM
+Setiap judul maksimal 70 karakter.
+Langsung output 5 judul, satu per baris, tanpa nomor, tanpa penjelasan tambahan.
+Judul harus to the point, powerful, dan mendorong klik."""
+                res = call_gemini_api(prompt)
                 if res:
                     st.code(res, language="text")
                 else:
@@ -876,16 +844,21 @@ with tab1:
 with tab2:
     st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name_desc = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="desc_name")
-    manfaat = st.text_area("Manfaat (pisahkan koma)", placeholder="Contoh: adem, nyaman, tidak panas", key="manfaat_desc")
-    if st.button("✨ Generate Elite Deskripsi", key="gen_desc", use_container_width=True):
-        with st.spinner("🧠 AI sedang menulis deskripsi..."):
+    manfaat = st.text_area("Manfaat (pisahkan koma)", placeholder="Contoh: adem, nyaman, tidak panas, tidak kusut", key="manfaat_desc")
+    if st.button("✨ Generate Deskripsi", key="gen_desc", use_container_width=True):
+        with st.spinner("🧠 AI copywriter sedang menulis deskripsi jualan..."):
             if p_name_desc:
-                prompt = f"Buat deskripsi untuk '{p_name_desc}' di Shopee. Manfaat: {manfaat}. Gunakan emoji, ajakan beli."
+                prompt = f"""Kamu adalah copywriter senior dengan pengalaman 10 tahun.
+Buat deskripsi produk untuk '{p_name_desc}' di Shopee.
+Manfaat produk: {manfaat if manfaat else 'belum diisi'}.
+Gunakan: emoji relevan, bullet points, ajakan beli (CTA) yang kuat.
+Panjang maksimal 250 karakter.
+Hasil harus to the point, fokus ke manfaat & solusi, tidak bertele-tele."""
                 res = call_gemini_api(prompt)
                 if res:
                     st.code(res, language="markdown")
                 else:
-                    st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}\n🔥 Promo terbatas!", language="markdown")
+                    st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium, nyaman dipakai'}\n🔥 Promo terbatas! KLIK SEKARANG!", language="markdown")
             else:
                 st.warning("Masukkan nama produk.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -894,31 +867,41 @@ with tab3:
     st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name_hook = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hook_name")
     gaya = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="gaya_hook")
-    if st.button("✨ Generate Elite Hook", key="gen_hook", use_container_width=True):
-        with st.spinner("🧠 AI sedang membuat hook..."):
+    if st.button("✨ Generate Hook Video", key="gen_hook", use_container_width=True):
+        with st.spinner("🧠 AI creative director sedang membuat hook video..."):
             if p_name_hook:
-                prompt = f"Buat 5 hook untuk '{p_name_hook}' di TikTok. Gaya: {gaya}. Hook 3 detik pertama."
+                prompt = f"""Kamu adalah creative director TikTok dengan 10 tahun pengalaman.
+Buat 5 hook untuk video TikTok produk '{p_name_hook}'.
+Gaya hook: {gaya}.
+Hook harus untuk 3 detik pertama video, pendek, powerful, bikin penonton berhenti scroll.
+Format: langsung teks hook saja, satu per baris, tanpa penjelasan.
+Target: viral & engagement tinggi."""
                 res = call_gemini_api(prompt)
                 if res:
                     for line in res.strip().split('\n'):
                         if line.strip():
                             st.markdown(f"- 🎬 {line.strip()}")
                 else:
-                    st.markdown(f"- 🎬 😫 Capek cari {p_name_hook}? STOP!")
-                    st.markdown(f"- 🎬 🔥 DISKON 50% {p_name_hook}!")
-                    st.markdown(f"- 🎬 🏆 {p_name_hook} BEST SELLER!")
+                    st.markdown(f"- 🎬 😫 Capek cari {p_name_hook} yang bagus? STOP!")
+                    st.markdown(f"- 🎬 🔥 DISKON 50% HARI INI! {p_name_hook}")
+                    st.markdown(f"- 🎬 🏆 {p_name_hook} BEST SELLER! 1000+ terjual")
             else:
                 st.warning("Masukkan nama produk.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with tab4:
-    st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+    st.markdown('<div class="generator-card">, unsafe_allow_html=True)
     p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
     niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
     if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
-        with st.spinner("🧠 AI sedang membuat hashtag..."):
+        with st.spinner("🧠 AI trend analyst sedang meracik hashtag..."):
             if p_name_hash:
-                prompt = f"Buat 15 hashtag TikTok untuk '{p_name_hash}', niche {niche_hash}. Format: #fyp #viral #namaproduk"
+                prompt = f"""Kamu adalah trend analyst TikTok berpengalaman 10 tahun.
+Buat 15 hashtag untuk produk '{p_name_hash}', niche {niche_hash}.
+Kombinasikan: trending hashtag, niche hashtag, broad hashtag.
+Format: #fyp #viral #namaproduk #niche
+Output langsung satu baris, tanpa penjelasan, tanpa nomor.
+Target: menjangkau audiens luas dan tepat sasaran."""
                 res = call_gemini_api(prompt)
                 if res:
                     st.code(res, language="text")
