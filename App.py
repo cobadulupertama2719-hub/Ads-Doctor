@@ -378,12 +378,17 @@ def import_products(file):
 
 # ==================== FUNGSI REKOMENDASI ====================
 def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_set, target_roas, budget_spent, ctr):
+    """Menghasilkan rekomendasi berdasarkan aturan 1-5"""
     rekom_tindakan = ""
     rekom_roas = target_roas
     rekom_budget = budget_set
     prioritas = ""
     warna = "info"
     
+    # DEBUG: tampilkan parameter (hapus nanti)
+    # st.write(f"Debug: roas={roas_aktual:.2f}, bep={roas_bep:.2f}, s_rate={s_rate:.2f}, orders={orders}")
+    
+    # PRIORITAS 1: Banyak klik, budget habis, tapi 0 order
     if clicks > 50 and s_rate >= 80 and orders == 0:
         prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
@@ -392,56 +397,101 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 📊 Data: {clicks} klik, budget terserap {s_rate:.0f}%, tapi 0 order.
 
+**Penyebab:** Produk belum layak iklan.
+
 **Yang harus dilakukan:**
-1. Cek harga produk dengan kompetitor
+1. Cek harga produk — bandingkan dengan kompetitor
 2. Tambah review & rating (target 10-20 review positif)
-3. Perbaiki deskripsi — fokus ke MANFAAT"""
+3. Perbaiki deskripsi — fokus ke MANFAAT
+4. Pastikan stok aman
+
+**Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**"""
     
+    # PRIORITAS 4: Budget habis (>=85%) DAN ROAS 20% di atas BEP → SCALE
     elif s_rate >= 85 and roas_aktual >= roas_bep * 1.2:
         prioritas = "🟢 PRIORITAS 4 - SIAP SCALE"
         warna = "success"
         rekom_budget = budget_set * 1.3
         rekom_tindakan = f"""🚀 **SIAP SCALE!**
 
-📈 ROAS {roas_aktual:.1f}x > BEP {roas_bep:.1f}x (untung)
-💰 Budget terserap {s_rate:.0f}% (hampir habis)
+📈 ROAS {roas_aktual:.1f}x > BEP {roas_bep:.1f}x (UNTUNG)
+💰 Budget terserap {s_rate:.0f}% (HAMPIR HABIS)
 
-✅ Naikkan **BUDGET 30%** menjadi {format_rp(rekom_budget)}"""
+**ATURAN SCALE:**
+✅ Naikkan **BUDGET 30%** dari {format_rp(budget_set)} menjadi {format_rp(rekom_budget)}
+✅ **PERTAHANKAN** target ROAS di {target_roas:.1f}x
+
+⏰ **Tunggu 3 hari** tanpa perubahan apapun untuk melihat hasil scale."""
     
+    # PRIORITAS 2: ROAS untung TAPI budget masih banyak sisa (<85%)
     elif roas_aktual >= roas_bep and s_rate < 85:
-        prioritas = "🟡 PRIORITAS 2 - OPTIMASI"
+        prioritas = "🟡 PRIORITAS 2 - OPTIMASI BUDGET"
         warna = "warning"
         rekom_roas = target_roas - 0.5
-        rekom_tindakan = f"""⚡ **OPTIMASI BUDGET**
+        rekom_tindakan = f"""⚡ **OPTIMASI BUDGET AGAR HABIS & ORDER MAKSIMAL!**
 
-✅ ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (untung)
-📊 Budget terserap {s_rate:.0f}%
+✅ ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (PROFIT)
+📊 Budget terserap HANYA {s_rate:.0f}% = masih sisa Rp{budget_set - budget_spent:,.0f}
 
-✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**"""
+**SOLUSI AGAR BUDGET HABIS & ORDER MAKSIMAL:**
+✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
+✅ **PERTAHANKAN** budget tetap {format_rp(budget_set)}
+
+⏰ **Tunggu 3 hari** dengan setting baru ini, budget akan terserap lebih cepat."""
     
+    # PRIORITAS 3: ROAS di bawah BEP (RUGI)
     elif roas_aktual < roas_bep and roas_aktual > 0:
-        prioritas = "🔴 PRIORITAS 3 - IKLAN RUGI"
+        prioritas = "🔴 PRIORITAS 3 - IKLAN RUGI (ROAS < BEP)"
         warna = "danger"
         rekom_roas = roas_bep + 0.5
         rekom_budget = budget_set * 0.7
-        rekom_tindakan = f"""💸 **IKLAN RUGI!**
+        rekom_tindakan = f"""💸 **IKLAN SEDANG RUGI!**
 
 📉 ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
 
+**SOLUSI AGAR TIDAK RUGI:**
 ✅ Naikkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
-🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)}"""
-    
-    else:
-        prioritas = "🟢 PRIORITAS 5 - PANTAU"
-        rekom_tindakan = f"""✅ **PERFORMA SEHAT**
+🔻 Turunkan budget **30%** dari {format_rp(budget_set)} menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian
 
-📈 ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x
+⏰ **Tunggu 3 hari** lalu evaluasi ulang."""
+    
+    # PRIORITAS 5: Performa sehat (ROAS >= BEP)
+    elif roas_aktual >= roas_bep:
+        prioritas = "🟢 PRIORITAS 5 - PERFORMA SEHAT, PANTAU SAJA"
+        rekom_tindakan = f"""✅ **PERFORMA IKLAN SEHAT**
+
+📈 ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (PROFIT)
 💰 Budget terserap {s_rate:.0f}%
 
-⏰ Pantau selama **3-5 hari** tanpa perubahan"""
+**REKOMENDASI:**
+✅ Pertahankan setting saat ini
+⏰ Pantau selama **3-5 hari** tanpa perubahan
+
+📊 Jika budget habis cepat (<24 jam) → iklan siap naik scale
+📊 Jika budget tidak habis → lakukan optimasi target ROAS"""
     
-    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan:
-        rekom_tindakan += f"\n\n📸 CTR {ctr:.1f}% < 2% → Ganti visual iklan."
+    # Default fallback
+    else:
+        prioritas = "ℹ️ PERLU DATA LEBIH LENGKAP"
+        rekom_tindakan = f"""📊 **Data Belum Cukup**
+
+Mohon isi data performa iklan dengan lengkap:
+- Pastikan Impressions > 0
+- Pastikan Budget Spent > 0
+- Pastikan Budget Setting > 0
+
+Setelah data lengkap, klik RUN ANALYTICS lagi."""
+    
+    # Tambahan saran CTR rendah
+    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan and "tidak ditemukan" not in rekom_tindakan:
+        rekom_tindakan += f"""
+
+---
+📸 **MASALAH CTR RENDAH!**
+
+CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
+
+**Solusi:** Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
     
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
