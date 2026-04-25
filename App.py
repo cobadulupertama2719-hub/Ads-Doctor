@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Advertising Command Center",
     page_icon="🩺",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # 2. CSS untuk menyembunyikan header default Streamlit
