@@ -105,7 +105,6 @@ def apply_premium_style():
     }
 
     /* ============ STYLE UNTUK INPUT KOLOM ============ */
-    /* Input number - selaras dengan background */
     .stNumberInput input, .stTextInput input, .stSelectbox div, .stTextArea textarea {
         background: rgba(15, 25, 45, 0.9) !important; 
         border: 1px solid rgba(255, 255, 255, 0.2) !important; 
@@ -140,7 +139,6 @@ def apply_premium_style():
     }
     
     /* ============ KOLOM REKOMENDASI ============ */
-    /* Danger (merah) untuk urgent */
     .rekom-danger {
         background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
         border-left: 5px solid #ef4444;
@@ -153,7 +151,6 @@ def apply_premium_style():
         color: #fecaca !important;
     }
     
-    /* Warning (kuning) untuk optimasi */
     .rekom-warning {
         background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
         border-left: 5px solid #f59e0b;
@@ -166,7 +163,6 @@ def apply_premium_style():
         color: #fde68a !important;
     }
     
-    /* Success (hijau) untuk scale */
     .rekom-success {
         background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%);
         border-left: 5px solid #10b981;
@@ -179,7 +175,6 @@ def apply_premium_style():
         color: #a7f3d0 !important;
     }
     
-    /* Info (biru) untuk pantau */
     .rekom-info {
         background: linear-gradient(135deg, #0c4a6e 0%, #0284c7 100%);
         border-left: 5px solid #3b82f6;
@@ -207,7 +202,6 @@ def apply_premium_style():
         transform: translateY(-2px);
     }
     
-    /* Code block untuk hasil generator */
     .stCodeBlock {
         background: #0f172a !important;
         border-radius: 12px !important;
@@ -218,7 +212,6 @@ def apply_premium_style():
         color: #E2E8F0 !important;
     }
     
-    /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         background: rgba(15, 25, 45, 0.5);
@@ -238,7 +231,6 @@ def apply_premium_style():
         color: #020617 !important;
     }
     
-    /* Metric cards */
     .metric-value {
         color: #FFFFFF !important;
         font-size: 2rem;
@@ -250,12 +242,10 @@ def apply_premium_style():
         font-size: 0.8rem;
     }
     
-    /* Alert / Info box */
     .stAlert {
         color: #000000 !important;
     }
     
-    /* Wrapper untuk analisis */
     .analytics-wrapper {
         background: rgba(15, 25, 45, 0.6);
         border-radius: 20px;
@@ -267,26 +257,37 @@ def apply_premium_style():
 
 apply_premium_style()
 
-# ==================== 2. SESSION & LOCK SYSTEM ====================
-if "authenticated" not in st.session_state: st.session_state["authenticated"] = False
-if "demo_mode" not in st.session_state: st.session_state["demo_mode"] = False
-if "demo_start_time" not in st.session_state: st.session_state["demo_start_time"] = None
-if "demo_analysis_count" not in st.session_state: st.session_state["demo_analysis_count"] = 0
-if "products" not in st.session_state: st.session_state["products"] = []
-if "analysis_done" not in st.session_state: st.session_state["analysis_done"] = False
-if "last_ctr" not in st.session_state: st.session_state["last_ctr"] = 0
-if "last_roas" not in st.session_state: st.session_state["last_roas"] = 0
-if "last_roas_bep" not in st.session_state: st.session_state["last_roas_bep"] = 0
-if "last_s_rate" not in st.session_state: st.session_state["last_s_rate"] = 0
-if "last_clicks" not in st.session_state: st.session_state["last_clicks"] = 0
-if "last_orders" not in st.session_state: st.session_state["last_orders"] = 0
-if "last_profit" not in st.session_state: st.session_state["last_profit"] = 0
-if "last_budget_set" not in st.session_state: st.session_state["last_budget_set"] = 0
-if "last_target_roas" not in st.session_state: st.session_state["last_target_roas"] = 0
-if "last_budget_spent" not in st.session_state: st.session_state["last_budget_spent"] = 0
+# ==================== 2. SESSION STATE ====================
+if "authenticated" not in st.session_state: 
+    st.session_state["authenticated"] = False
+if "products" not in st.session_state: 
+    st.session_state["products"] = []
+if "analysis_done" not in st.session_state: 
+    st.session_state["analysis_done"] = False
+if "last_ctr" not in st.session_state: 
+    st.session_state["last_ctr"] = 0
+if "last_roas" not in st.session_state: 
+    st.session_state["last_roas"] = 0
+if "last_roas_bep" not in st.session_state: 
+    st.session_state["last_roas_bep"] = 0
+if "last_s_rate" not in st.session_state: 
+    st.session_state["last_s_rate"] = 0
+if "last_clicks" not in st.session_state: 
+    st.session_state["last_clicks"] = 0
+if "last_orders" not in st.session_state: 
+    st.session_state["last_orders"] = 0
+if "last_profit" not in st.session_state: 
+    st.session_state["last_profit"] = 0
+if "last_budget_set" not in st.session_state: 
+    st.session_state["last_budget_set"] = 0
+if "last_target_roas" not in st.session_state: 
+    st.session_state["last_target_roas"] = 0
+if "last_budget_spent" not in st.session_state: 
+    st.session_state["last_budget_spent"] = 0
 
-ADMIN_USERNAME = "arkidigital"
-ADMIN_PASSWORD = "Arkidigital2026"
+# Ambil dari secrets.toml
+ADMIN_USERNAME = st.secrets.get("ADMIN_USERNAME", "arkidigital")
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "Arkidigital2026")
 CHECKOUT_LINK = "https://muhammad-masruri.myscalev.com/checkout-pageku"
 
 # ==================== API KEY CONFIGURATION ====================
@@ -307,8 +308,10 @@ def call_gemini_api(prompt):
         return None
 
 def format_rp(angka):
-    if angka >= 1_000_000: return f"Rp{angka/1_000_000:.1f}JT"
-    if angka >= 1000: return f"Rp{angka/1000:.0f}RB"
+    if angka >= 1_000_000: 
+        return f"Rp{angka/1_000_000:.1f}JT"
+    if angka >= 1000: 
+        return f"Rp{angka/1000:.0f}RB"
     return f"Rp{angka:,.0f}"
 
 # ==================== DATABASE PRODUK ====================
@@ -338,7 +341,7 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
     if clicks > 50 and s_rate >= 80 and orders == 0:
         prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
-        rekom_budget = budget_set * 0.5
+        rekom_budget = 0
         rekom_tindakan = f"""🚨 **HENTIKAN IKLAN SEGERA!**
 
 📊 Data: {clicks} klik, budget terserap {s_rate:.0f}%, tapi 0 order.
@@ -419,91 +422,84 @@ CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
     
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
-# ==================== 3. ACCESS CONTROL ====================
-demo_expired = False
-if st.session_state.demo_mode and st.session_state.demo_start_time:
-    elapsed = (datetime.now() - st.session_state.demo_start_time).total_seconds()
-    if elapsed > 300 or st.session_state.demo_analysis_count >= 2:
-        demo_expired = True
-
-is_premium = st.session_state.authenticated
-
-if (not is_premium and not st.session_state.demo_mode) or demo_expired:
+# ==================== 3. ACCESS CONTROL (PREMIUM ONLY) ====================
+# Hanya akses jika sudah login premium
+if not st.session_state.authenticated:
     st.markdown('<div style="text-align:center; padding-top:50px;">', unsafe_allow_html=True)
-    if demo_expired:
-        st.markdown('<h1 class="gold-header">⏰ TRIAL SELESAI</h1>', unsafe_allow_html=True)
-        st.markdown('<h3>Akses demo habis. Upgrade sekarang untuk kontrol penuh tanpa batas!</h3>', unsafe_allow_html=True)
-    else:
-        st.markdown('<h1 class="gold-header" style="font-size:4.5rem;">🩺 DOCTOR ADS</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="gold-header" style="font-size:4.5rem;">🩺 DOCTOR ADS</h1>', unsafe_allow_html=True)
+    st.markdown('<h3 style="margin-bottom:30px;">Premium Advertising Command Center</h3>', unsafe_allow_html=True)
     
-    st.markdown(f'<a href="{CHECKOUT_LINK}" target="_blank" class="cta-upgrade">💎 UNLOCK PREMIUM SEKARANG - RP147RB</a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="{CHECKOUT_LINK}" target="_blank" class="cta-upgrade">💎 UNLOCK PREMIUM - RP147RB</a>', unsafe_allow_html=True)
     
-    c1, c2 = st.columns(2)
-    with c1:
-        with st.form("login"):
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        with st.form("login_form"):
             st.markdown("### 🔐 Member Login")
             u = st.text_input("Username")
             p = st.text_input("Password", type="password")
-            if st.form_submit_button("MASUK DASHBOARD"):
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                submitted = st.form_submit_button("MASUK", use_container_width=True)
+            with col_btn2:
+                if st.form_submit_button("LOGOUT", use_container_width=True):
+                    st.session_state.clear()
+                    st.rerun()
+            
+            if submitted:
                 if u == ADMIN_USERNAME and p == ADMIN_PASSWORD:
                     st.session_state.authenticated = True
-                    st.session_state.demo_mode = False
+                    st.session_state.analysis_done = False
                     st.rerun()
-                else: st.error("Login Gagal!")
-    with c2:
-        if not demo_expired:
-            st.markdown('<div class="premium-card"><h3>🎁 Demo Mode</h3>', unsafe_allow_html=True)
-            st.write("Coba 5 menit atau 2x analisis secara gratis.")
-            if st.button("MULAI TRIAL"):
-                st.session_state.demo_mode = True
-                st.session_state.demo_start_time = datetime.now()
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.error("❌ Username atau Password salah!")
+    
     st.stop()
 
-# ==================== 4. MAIN ELITE DASHBOARD ====================
+# ==================== 4. MAIN PREMIUM DASHBOARD ====================
 st.markdown('<h1 class="gold-header">🩺 ADVERTISING COMMAND CENTER</h1>', unsafe_allow_html=True)
 
-# --- SIDEBAR DATABASE PRODUK ---
+# --- SIDEBAR DATABASE PRODUK & LOGOUT ---
 with st.sidebar:
     st.markdown("### 📦 **Produk Database**")
-    if is_premium:
-        products = st.session_state.products
-        with st.expander("➕ Simpan Produk Baru"):
-            nama_produk_db = st.text_input("Nama Produk", key="nama_produk_db")
-            hj_db = st.number_input("Harga Jual", min_value=1000, value=100000, key="hj_db")
-            modal_db = st.number_input("Modal", min_value=500, value=60000, key="modal_db")
-            admin_db = st.slider("Admin %", 5, 30, 20, key="admin_db")
-            if st.button("💾 Simpan ke Database", key="simpan_db") and nama_produk_db:
-                admin_nom = hj_db * admin_db / 100
-                laba_db = hj_db - modal_db - admin_nom
-                roas_db = hj_db / laba_db if laba_db > 0 else 999
-                save_product({"nama": nama_produk_db, "harga_jual": hj_db, "modal": modal_db, "admin_persen": admin_db, "laba_kotor": laba_db, "roas_bep": roas_db})
-                st.success(f"✅ {nama_produk_db} tersimpan!")
-        if products:
-            pilih_produk = st.selectbox("Pilih Produk", ["-- Pilih --"] + [p["nama"] for p in products], key="pilih_produk_sidebar")
-            if pilih_produk != "-- Pilih --":
-                prod = next(p for p in products if p["nama"] == pilih_produk)
-                st.info(f"ROAS BEP: {prod['roas_bep']:.1f}x | Laba: Rp{prod['laba_kotor']:,.0f}")
-                if st.button("🗑️ Hapus Produk", key="hapus_produk_sidebar"):
-                    delete_product(pilih_produk)
-                    st.rerun()
+    
+    with st.expander("➕ Simpan Produk Baru"):
+        nama_produk_db = st.text_input("Nama Produk", key="nama_produk_db")
+        hj_db = st.number_input("Harga Jual", min_value=1000, value=100000, key="hj_db")
+        modal_db = st.number_input("Modal", min_value=500, value=60000, key="modal_db")
+        admin_db = st.slider("Admin %", 5, 30, 20, key="admin_db")
+        if st.button("💾 Simpan ke Database", key="simpan_db") and nama_produk_db:
+            admin_nom = hj_db * admin_db / 100
+            laba_db = hj_db - modal_db - admin_nom
+            roas_db = hj_db / laba_db if laba_db > 0 else 999
+            save_product({"nama": nama_produk_db, "harga_jual": hj_db, "modal": modal_db, "admin_persen": admin_db, "laba_kotor": laba_db, "roas_bep": roas_db})
+            st.success(f"✅ {nama_produk_db} tersimpan!")
+    
+    if st.session_state.products:
+        pilih_produk = st.selectbox("Pilih Produk", ["-- Pilih --"] + [p["nama"] for p in st.session_state.products], key="pilih_produk_sidebar")
+        if pilih_produk != "-- Pilih --":
+            prod = next(p for p in st.session_state.products if p["nama"] == pilih_produk)
+            st.info(f"ROAS BEP: {prod['roas_bep']:.1f}x | Laba: Rp{prod['laba_kotor']:,.0f}")
+            if st.button("🗑️ Hapus Produk", key="hapus_produk_sidebar"):
+                delete_product(pilih_produk)
+                st.rerun()
     
     st.markdown("---")
-    if not is_premium:
-        st.markdown(f'<a href="{CHECKOUT_LINK}" target="_blank" style="display:block; text-align:center; background:#00E5A0; color:#020617; padding:10px; border-radius:40px; text-decoration:none; font-weight:bold;">💎 Upgrade Premium</a>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div style="text-align:center; background:rgba(0,229,160,0.2); padding:10px; border-radius:40px;"><span style="color:#00E5A0;">⭐ PREMIUM MEMBER ⭐</span></div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align:center; background:rgba(0,229,160,0.2); padding:10px; border-radius:40px;"><span style="color:#00E5A0;">⭐ PREMIUM MEMBER ⭐</span></div>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    if st.button("🚪 LOGOUT", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
 
 # --- FINANSIAL AUDIT ---
 col_calc, col_audit = st.columns([2, 1])
 with col_calc:
     st.markdown('<div class="premium-card"><h3>🎯 ROAS BEP Calculator</h3>', unsafe_allow_html=True)
     cb1, cb2, cb3 = st.columns(3)
-    hj = cb1.number_input("Harga Jual (Rp)", value=150000, key="hj_main")
-    modal = cb2.number_input("Modal (Rp)", value=75000, key="modal_main")
+    hj = cb1.number_input("Harga Jual (Rp)", min_value=1000, value=150000, key="hj_main")
+    modal = cb2.number_input("Modal (Rp)", min_value=500, value=75000, key="modal_main")
     admin_p = cb3.slider("Admin Platform %", 5, 30, 20, key="admin_main")
-    target_p = st.number_input("Target Profit (Rp)", value=0, key="target_main")
+    target_p = st.number_input("Target Profit (Rp)", min_value=0, value=0, key="target_main")
     
     laba_kotor_p = hj - modal - (hj * admin_p / 100)
     laba_setelah_p = laba_kotor_p - target_p
@@ -526,7 +522,7 @@ with col_audit:
         st.error("❌ Belum layak iklan! Validasi produk dulu.")
         st.info("💡 Saran: Kumpulkan minimal 10 review positif terlebih dahulu.")
     else:
-        h_komp = st.number_input("Harga Kompetitor", value=140000, key="harga_komp_main")
+        h_komp = st.number_input("Harga Kompetitor", min_value=1000, value=140000, key="harga_komp_main")
         if hj > h_komp * 1.2: 
             st.warning("⚠️ Harga terlalu mahal. Turunkan atau tambah value produk.")
         elif laba_kotor_p < 5000: 
@@ -540,13 +536,13 @@ with col_audit:
 # --- ANALISIS IKLAN ---
 st.markdown('<div class="premium-card"><h3>📊 Ad Performance Matrix</h3>', unsafe_allow_html=True)
 ip1, ip2, ip3 = st.columns(3)
-impressions = ip1.number_input("👁️ Impressions", value=20000, key="imp_main")
-clicks = ip1.number_input("🖱️ Clicks", value=600, key="clicks_main")
-budget_spent = ip2.number_input("💸 Spent (Rp)", value=150000, key="spent_main")
-sales = ip2.number_input("💰 Revenue (Rp)", value=900000, key="sales_main")
-orders = ip3.number_input("📦 Orders", value=8, key="orders_main")
-budget_set = ip3.number_input("Budget Setting", value=200000, key="budget_set_main")
-target_roas_p = st.number_input("🎯 Target ROAS", value=6.0, key="target_roas_main")
+impressions = ip1.number_input("👁️ Impressions", min_value=0, value=20000, key="imp_main")
+clicks = ip1.number_input("🖱️ Clicks", min_value=0, value=600, key="clicks_main")
+budget_spent = ip2.number_input("💸 Spent (Rp)", min_value=0, value=150000, key="spent_main")
+sales = ip2.number_input("💰 Revenue (Rp)", min_value=0, value=900000, key="sales_main")
+orders = ip3.number_input("📦 Orders", min_value=0, value=8, key="orders_main")
+budget_set = ip3.number_input("Budget Setting (Rp)", min_value=0, value=200000, key="budget_set_main")
+target_roas_p = st.number_input("🎯 Target ROAS", min_value=0.5, value=6.0, step=0.5, key="target_roas_main")
 
 # Tombol Analisis
 col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
@@ -554,15 +550,12 @@ with col_btn2:
     analize_clicked = st.button("⚡ RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics")
 
 if analize_clicked:
-    if st.session_state.demo_mode:
-        st.session_state.demo_analysis_count += 1
-    
-    # Hitung metrik
-    ctr_p = (clicks/impressions*100) if impressions > 0 else 0
-    roas_akt_p = (sales/budget_spent) if budget_spent > 0 else 0
-    s_rate_p = (budget_spent/budget_set*100) if budget_set > 0 else 0
+    # Hitung metrik dengan cegah division by zero
+    ctr_p = (clicks / impressions * 100) if impressions > 0 else 0
+    roas_akt_p = (sales / budget_spent) if budget_spent > 0 else 0
+    s_rate_p = (budget_spent / budget_set * 100) if budget_set > 0 else 0
     profit_est_p = (laba_kotor_p * orders) - budget_spent if orders > 0 else -budget_spent
-    cpc_p = budget_spent/clicks if clicks > 0 else 0
+    cpc_p = budget_spent / clicks if clicks > 0 else 0
     
     # Simpan ke session state
     st.session_state.analysis_done = True
@@ -791,7 +784,3 @@ with tab4:
             else:
                 st.warning("Masukkan nama produk.")
     st.markdown('</div>', unsafe_allow_html=True)
-
-# ==================== FOOTER ====================
-if not is_premium:
-    st.markdown(f'<div style="text-align:center; padding:60px;"><a href="{CHECKOUT_LINK}" target="_blank" class="cta-upgrade">💎 UPGRADE PREMIUM - AKSES TANPA BATAS</a></div>', unsafe_allow_html=True)
