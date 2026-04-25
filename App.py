@@ -6,7 +6,7 @@ import hashlib
 import requests
 import json
 
-# 1. SET PAGE CONFIG (WAJIB DI PALING ATAS)
+# 1. SET PAGE CONFIG (SIDEBAR EXPANDED)
 st.set_page_config(
     page_title="Advertising Command Center",
     page_icon="🩺",
@@ -242,6 +242,43 @@ def apply_premium_style():
         padding: 20px;
         margin-top: 20px;
     }
+
+    /* ============ TOMBOL SIDEBAR KONTRAK DAN TERLIHAT JELAS ============ */
+    button[kind="header"] {
+        background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
+        border-radius: 50% !important;
+        width: 48px !important;
+        height: 48px !important;
+        margin-top: 10px !important;
+        margin-left: 10px !important;
+        box-shadow: 0 4px 15px rgba(0, 229, 160, 0.5) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+    }
+
+    button[kind="header"]:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 6px 20px rgba(0, 229, 160, 0.8) !important;
+        background: linear-gradient(135deg, #00FFB0 0%, #00c890 100%) !important;
+    }
+
+    button[kind="header"] svg {
+        fill: #020617 !important;
+        stroke: #020617 !important;
+        width: 24px !important;
+        height: 24px !important;
+    }
+
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
+        border-right: 2px solid rgba(0, 229, 160, 0.3) !important;
+    }
+
+    [data-testid="stSidebarOverlay"] {
+        background: rgba(0, 0, 0, 0.7) !important;
+        backdrop-filter: blur(5px) !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -312,6 +349,7 @@ def call_gemini_api(prompt):
     try:
         response = requests.post(url, json=data, headers=headers, timeout=30)
         
+        # TAMPILKAN DETAIL ERROR DI SIDEBAR
         st.sidebar.markdown("---")
         st.sidebar.markdown("**🤖 API Debug Info:**")
         st.sidebar.write(f"Status Code: {response.status_code}")
@@ -463,10 +501,6 @@ if not st.session_state.authenticated:
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
                 submitted = st.form_submit_button("MASUK", use_container_width=True)
-            with col_btn2:
-                if st.form_submit_button("LOGOUT", use_container_width=True):
-                    st.session_state.clear()
-                    st.rerun()
             
             if submitted:
                 if u == ADMIN_USERNAME and p == ADMIN_PASSWORD:
@@ -481,38 +515,56 @@ if not st.session_state.authenticated:
 # ==================== 4. MAIN PREMIUM DASHBOARD ====================
 st.markdown('<h1 class="gold-header">🩺 ADVERTISING COMMAND CENTER</h1>', unsafe_allow_html=True)
 
-with st.sidebar:
-    st.markdown("### 📦 **Produk Database**")
+# ==================== PRODUK DATABASE DI DASHBOARD UTAMA ====================
+with st.expander("📦 **Database Produk**", expanded=False):
+    col_prod1, col_prod2 = st.columns([1, 1])
     
-    with st.expander("➕ Simpan Produk Baru"):
-        nama_produk_db = st.text_input("Nama Produk", key="nama_produk_db")
-        hj_db = st.number_input("Harga Jual", min_value=1000, value=100000, key="hj_db")
-        modal_db = st.number_input("Modal", min_value=500, value=60000, key="modal_db")
-        admin_db = st.slider("Admin %", 5, 30, 20, key="admin_db")
-        if st.button("💾 Simpan ke Database", key="simpan_db") and nama_produk_db:
+    with col_prod1:
+        st.markdown("### ➕ Simpan Produk Baru")
+        nama_produk_db = st.text_input("Nama Produk", placeholder="Contoh: Kaos Premium", key="nama_produk_dash")
+        hj_db = st.number_input("Harga Jual (Rp)", min_value=1000, value=100000, key="hj_dash")
+        modal_db = st.number_input("Modal (Rp)", min_value=500, value=60000, key="modal_dash")
+        admin_db = st.slider("Admin Platform %", 5, 30, 20, key="admin_dash")
+        
+        if st.button("💾 Simpan ke Database", key="simpan_dash") and nama_produk_db:
             admin_nom = hj_db * admin_db / 100
             laba_db = hj_db - modal_db - admin_nom
             roas_db = hj_db / laba_db if laba_db > 0 else 999
-            save_product({"nama": nama_produk_db, "harga_jual": hj_db, "modal": modal_db, "admin_persen": admin_db, "laba_kotor": laba_db, "roas_bep": roas_db})
+            save_product({
+                "nama": nama_produk_db, 
+                "harga_jual": hj_db, 
+                "modal": modal_db, 
+                "admin_persen": admin_db, 
+                "laba_kotor": laba_db, 
+                "roas_bep": roas_db
+            })
             st.success(f"✅ {nama_produk_db} tersimpan!")
+            st.rerun()
     
-    if st.session_state.products:
-        pilih_produk = st.selectbox("Pilih Produk", ["-- Pilih --"] + [p["nama"] for p in st.session_state.products], key="pilih_produk_sidebar")
-        if pilih_produk != "-- Pilih --":
-            prod = next(p for p in st.session_state.products if p["nama"] == pilih_produk)
-            st.info(f"ROAS BEP: {prod['roas_bep']:.1f}x | Laba: Rp{prod['laba_kotor']:,.0f}")
-            if st.button("🗑️ Hapus Produk", key="hapus_produk_sidebar"):
-                delete_product(pilih_produk)
-                st.rerun()
+    with col_prod2:
+        st.markdown("### 📋 Produk Tersimpan")
+        if st.session_state.products:
+            for idx, prod in enumerate(st.session_state.products):
+                col_a, col_b = st.columns([3, 1])
+                with col_a:
+                    st.markdown(f"**{prod['nama']}**  \nBEP: {prod['roas_bep']:.1f}x | Profit: Rp{prod['laba_kotor']:,.0f}")
+                with col_b:
+                    if st.button("🗑️", key=f"hapus_{idx}"):
+                        delete_product(prod['nama'])
+                        st.rerun()
+                st.markdown("---")
+        else:
+            st.info("Belum ada produk tersimpan. Silakan tambah produk baru.")
+
+# ==================== SIDEBAR (MINIMAL) ====================
+with st.sidebar:
+    st.markdown('<div style="text-align:center; background:rgba(0,229,160,0.2); padding:10px; border-radius:40px; margin-bottom:20px;"><span style="color:#00E5A0;">⭐ PREMIUM MEMBER ⭐</span></div>', unsafe_allow_html=True)
     
-    st.markdown("---")
-    st.markdown('<div style="text-align:center; background:rgba(0,229,160,0.2); padding:10px; border-radius:40px;"><span style="color:#00E5A0;">⭐ PREMIUM MEMBER ⭐</span></div>', unsafe_allow_html=True)
-    
-    st.markdown("---")
     if st.button("🚪 LOGOUT", use_container_width=True):
         st.session_state.clear()
         st.rerun()
 
+# ==================== FINANSIAL AUDIT ====================
 col_calc, col_audit = st.columns([2, 1])
 with col_calc:
     st.markdown('<div class="premium-card"><h3>🎯 ROAS BEP Calculator</h3>', unsafe_allow_html=True)
@@ -554,6 +606,7 @@ with col_audit:
                 st.balloons()
     st.markdown('</div>', unsafe_allow_html=True)
 
+# ==================== ANALISIS IKLAN ====================
 st.markdown('<div class="premium-card"><h3>📊 Ad Performance Matrix</h3>', unsafe_allow_html=True)
 ip1, ip2, ip3 = st.columns(3)
 impressions = ip1.number_input("👁️ Impressions", min_value=0, value=20000, key="imp_main")
@@ -644,6 +697,7 @@ Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah i
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# ==================== PREDIKSI SCALE ====================
 if st.session_state.analysis_done and st.session_state.last_roas >= st.session_state.last_roas_bep * 1.2:
     st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">📈 Prediksi Scale</h3>', unsafe_allow_html=True)
     new_budget_pred = st.session_state.last_budget_set * 1.3
@@ -659,6 +713,7 @@ if st.session_state.analysis_done and st.session_state.last_roas >= st.session_s
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+# ==================== PREDIKSI 7 HARI ====================
 if st.session_state.analysis_done and st.session_state.last_roas > 0:
     st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">📊 Prediksi 7 Hari ke Depan</h3>', unsafe_allow_html=True)
     
@@ -675,6 +730,7 @@ if st.session_state.analysis_done and st.session_state.last_roas > 0:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+# ==================== REKOMENDASI BUDGET BESOK ====================
 if st.session_state.analysis_done and st.session_state.last_roas > 0:
     st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">💰 Rekomendasi Budget Besok</h3>', unsafe_allow_html=True)
     
@@ -698,6 +754,7 @@ if st.session_state.analysis_done and st.session_state.last_roas > 0:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+# ==================== TANYA JAWAB AI ====================
 st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">💬 Tanya AI (Konsultasi Iklan)</h3>', unsafe_allow_html=True)
 user_question = st.text_input("Pertanyaan kamu:", placeholder="Contoh: ROAS saya turun drastis, harus gimana?", key="chatbot_question")
 if st.button("🤖 Tanya AI", use_container_width=True, key="ask_ai"):
@@ -718,6 +775,7 @@ Jawab dengan bahasa Indonesia yang ramah, profesional, dan berikan solusi prakti
         st.warning("Masukkan pertanyaan dulu.")
 st.markdown('</div>', unsafe_allow_html=True)
 
+# ==================== GENERATOR ====================
 st.markdown("<h2 class='gold-header'>✨ Elite Copywriter Lab</h2>", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook Video", "#️⃣ Hashtag"])
