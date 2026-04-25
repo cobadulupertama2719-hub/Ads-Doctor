@@ -405,7 +405,9 @@ def import_products(file):
         return False
 
 # ==================== FUNGSI REKOMENDASI (TIDAK DIUBAH) ====================
+
 def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_set, target_roas, budget_spent, ctr):
+    """Menghasilkan rekomendasi berdasarkan aturan 1-5"""
     rekom_tindakan = ""
     rekom_roas = target_roas
     rekom_budget = budget_set
@@ -413,36 +415,86 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
     warna = "info"
     
     if clicks > 50 and s_rate >= 80 and orders == 0:
-        prioritas = "🔴 URGENT STOP IKLAN"
+        prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
         rekom_budget = 0
-        rekom_tindakan = f"HENTIKAN IKLAN! {clicks} klik tapi 0 order. Produk belum layak iklan."
+        rekom_tindakan = f"""🚨 **HENTIKAN IKLAN SEGERA!**
+
+📊 Data: {clicks} klik, budget terserap {s_rate:.0f}%, tapi 0 order.
+
+**Penyebab:** Produk belum layak iklan.
+
+**Yang harus dilakukan:**
+1. Cek harga produk — bandingkan dengan kompetitor
+2. Tambah review & rating (target 10-20 review positif)
+3. Perbaiki deskripsi — fokus ke MANFAAT
+4. Pastikan sudah ikut promo campaign dan flash sale
+
+**Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**"""
     
     elif s_rate >= 85 and roas_aktual >= roas_bep * 1.2:
-        prioritas = "🟢 SIAP SCALE"
+        prioritas = "🟢 PRIORITAS 4 - SIAP SCALE"
         warna = "success"
         rekom_budget = budget_set * 1.3
-        rekom_tindakan = f"Scale 30% budget menjadi {format_rp(rekom_budget)}"
+        rekom_tindakan = f"""🚀 **SIAP SCALE!**
+
+📈 ROAS {roas_aktual:.1f}x > BEP {roas_bep:.1f}x (untung)
+💰 Budget terserap {s_rate:.0f}% (hampir habis)
+
+**Aturan SCALE yang benar:**
+✅ Naikkan **BUDGET 30%** menjadi {format_rp(rekom_budget)}
+✅ **PERTAHANKAN** target ROAS di {target_roas:.1f}x
+
+⏰ **Tunggu 3 hari** tanpa perubahan apapun."""
     
     elif roas_aktual >= roas_bep and s_rate < 85:
-        prioritas = "🟡 OPTIMASI BUDGET"
+        prioritas = "🟡 PRIORITAS 2 - OPTIMASI"
         warna = "warning"
         rekom_roas = target_roas - 0.5
-        rekom_tindakan = f"Turunkan target ROAS 0.5x menjadi {rekom_roas:.1f}x"
+        rekom_tindakan = f"""⚡ **OPTIMASI BUDGET**
+
+✅ ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (untung)
+📊 Budget terserap {s_rate:.0f}% (masih ada sisa Rp{budget_set - budget_spent:,.0f})
+
+**Agar budget habis dan order maksimal:**
+✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
+✅ **JANGAN UBAH BUDGET** (tetap {format_rp(budget_set)})
+
+⏰ **Tunggu 3 hari** tanpa perubahan apapun."""
     
     elif roas_aktual < roas_bep and roas_aktual > 0:
-        prioritas = "🔴 IKLAN RUGI"
+        prioritas = "🔴 PRIORITAS 3 - IKLAN RUGI"
         warna = "danger"
         rekom_roas = roas_bep + 0.5
         rekom_budget = budget_set * 0.7
-        rekom_tindakan = f"Turunkan budget 30% + naikkan target ROAS ke {rekom_roas:.1f}x"
+        rekom_tindakan = f"""💸 **IKLAN RUGI!**
+
+📉 ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
+
+**Solusi:**
+✅ Naikkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
+🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian"""
     
-    else:
-        prioritas = "🟢 PERFORMA SEHAT"
-        rekom_tindakan = "Pertahankan setting, pantau 3-5 hari"
+    elif roas_aktual >= roas_bep:
+        prioritas = "🟢 PRIORITAS 5 - PANTAU"
+        rekom_tindakan = f"""✅ **PERFORMA SEHAT**
+
+📈 ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x
+💰 Budget terserap {s_rate:.0f}%
+
+**Rekomendasi:**
+✅ Pertahankan setting saat ini
+⏰ Pantau selama **3-5 hari** tanpa perubahan"""
     
-    if ctr < 2 and clicks > 0 and "Stop" not in rekom_tindakan:
-        rekom_tindakan += " | CTR rendah (<2%), ganti visual iklan"
+    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan:
+        rekom_tindakan += f"""
+
+---
+📸 **MASALAH CTR RENDAH!**
+
+CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
+
+**Solusi:** Ganti visual konten (foto produk slide kedua dan seterusnya / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
     
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
