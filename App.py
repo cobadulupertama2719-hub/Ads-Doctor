@@ -37,12 +37,10 @@ def apply_premium_style():
         color: #E2E8F0 !important; 
     }
     
-    /* Warna teks yang kontras dan mudah dibaca */
     h1, h2, h3, h4, h5, h6, p, label, .stMarkdown {
         color: #E2E8F0 !important;
     }
     
-    /* Warna khusus untuk teks di dalam card premium */
     .premium-card, .premium-card p, .premium-card h1, .premium-card h2, .premium-card h3 {
         color: #E2E8F0 !important;
     }
@@ -61,7 +59,6 @@ def apply_premium_style():
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
     }
     
-    /* Warna gold untuk header */
     .gold-header {
         background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
         -webkit-background-clip: text;
@@ -70,19 +67,16 @@ def apply_premium_style():
         text-shadow: none;
     }
     
-    /* Warna hijau untuk angka positif */
     .text-profit {
         color: #00E5A0 !important;
         font-weight: bold;
     }
     
-    /* Warna merah untuk angka negatif */
     .text-loss {
         color: #FF6B6B !important;
         font-weight: bold;
     }
 
-    /* CTA UPGRADE */
     .cta-upgrade {
         background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%);
         color: #020617 !important;
@@ -104,7 +98,6 @@ def apply_premium_style():
         box-shadow: 0 20px 50px rgba(0, 229, 160, 0.7);
     }
 
-    /* ============ STYLE UNTUK INPUT KOLOM ============ */
     .stNumberInput input, .stTextInput input, .stSelectbox div, .stTextArea textarea {
         background: rgba(15, 25, 45, 0.9) !important; 
         border: 1px solid rgba(255, 255, 255, 0.2) !important; 
@@ -119,7 +112,6 @@ def apply_premium_style():
         box-shadow: 0 0 0 2px rgba(0, 229, 160, 0.2) !important;
     }
     
-    /* ============ TOMBOL RUN ANALYTICS ============ */
     .stButton button {
         background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
         color: #020617 !important;
@@ -138,7 +130,6 @@ def apply_premium_style():
         box-shadow: 0 8px 25px rgba(0, 229, 160, 0.5) !important;
     }
     
-    /* ============ KOLOM REKOMENDASI ============ */
     .rekom-danger {
         background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
         border-left: 5px solid #ef4444;
@@ -187,7 +178,6 @@ def apply_premium_style():
         color: #bae6fd !important;
     }
     
-    /* ============ GENERATOR CARD ============ */
     .generator-card {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid #334155;
@@ -285,22 +275,24 @@ if "last_target_roas" not in st.session_state:
 if "last_budget_spent" not in st.session_state: 
     st.session_state["last_budget_spent"] = 0
 
-# Ambil dari secrets.toml
 ADMIN_USERNAME = st.secrets.get("ADMIN_USERNAME", "arkidigital")
 ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "Arkidigital2026")
 CHECKOUT_LINK = "https://muhammad-masruri.myscalev.com/checkout-pageku"
-
-# ==================== API KEY CONFIGURATION ====================
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
-def call_gemini_api(prompt):
+def format_rp(angka):
+    if angka >= 1_000_000: 
+        return f"Rp{angka/1_000_000:.1f}JT"
+    if angka >= 1000: 
+        return f"Rp{angka/1000:.0f}RB"
+    return f"Rp{angka:,.0f}"
 
+# ==================== FUNGSI CALL GEMINI API ====================
 def call_gemini_api(prompt):
     """Panggil Gemini API via HTTP - DEBUG VERSION"""
     if not GEMINI_API_KEY:
         return "❌ API Key tidak ditemukan di secrets"
     
-    # Pakai model yang paling stabil
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     headers = {
@@ -320,7 +312,6 @@ def call_gemini_api(prompt):
     try:
         response = requests.post(url, json=data, headers=headers, timeout=30)
         
-        # TAMPILKAN DETAIL ERROR DI SIDEBAR
         st.sidebar.markdown("---")
         st.sidebar.markdown("**🤖 API Debug Info:**")
         st.sidebar.write(f"Status Code: {response.status_code}")
@@ -346,7 +337,7 @@ def call_gemini_api(prompt):
         st.sidebar.error(f"Exception: {type(e).__name__}")
         st.sidebar.write(f"Detail: {str(e)[:200]}")
         return f"❌ Error: {str(e)[:100]}"
-        
+
 # ==================== DATABASE PRODUK ====================
 def save_product(p):
     products = st.session_state.products
@@ -456,7 +447,6 @@ CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
 # ==================== 3. ACCESS CONTROL (PREMIUM ONLY) ====================
-# Hanya akses jika sudah login premium
 if not st.session_state.authenticated:
     st.markdown('<div style="text-align:center; padding-top:50px;">', unsafe_allow_html=True)
     st.markdown('<h1 class="gold-header" style="font-size:4.5rem;">🩺 DOCTOR ADS</h1>', unsafe_allow_html=True)
@@ -491,7 +481,6 @@ if not st.session_state.authenticated:
 # ==================== 4. MAIN PREMIUM DASHBOARD ====================
 st.markdown('<h1 class="gold-header">🩺 ADVERTISING COMMAND CENTER</h1>', unsafe_allow_html=True)
 
-# --- SIDEBAR DATABASE PRODUK & LOGOUT ---
 with st.sidebar:
     st.markdown("### 📦 **Produk Database**")
     
@@ -524,7 +513,6 @@ with st.sidebar:
         st.session_state.clear()
         st.rerun()
 
-# --- FINANSIAL AUDIT ---
 col_calc, col_audit = st.columns([2, 1])
 with col_calc:
     st.markdown('<div class="premium-card"><h3>🎯 ROAS BEP Calculator</h3>', unsafe_allow_html=True)
@@ -566,7 +554,6 @@ with col_audit:
                 st.balloons()
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- ANALISIS IKLAN ---
 st.markdown('<div class="premium-card"><h3>📊 Ad Performance Matrix</h3>', unsafe_allow_html=True)
 ip1, ip2, ip3 = st.columns(3)
 impressions = ip1.number_input("👁️ Impressions", min_value=0, value=20000, key="imp_main")
@@ -577,20 +564,16 @@ orders = ip3.number_input("📦 Orders", min_value=0, value=8, key="orders_main"
 budget_set = ip3.number_input("Budget Setting (Rp)", min_value=0, value=200000, key="budget_set_main")
 target_roas_p = st.number_input("🎯 Target ROAS", min_value=0.5, value=6.0, step=0.5, key="target_roas_main")
 
-# Tombol Analisis
 col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
 with col_btn2:
     analize_clicked = st.button("⚡ RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics")
 
 if analize_clicked:
-    # Hitung metrik dengan cegah division by zero
     ctr_p = (clicks / impressions * 100) if impressions > 0 else 0
     roas_akt_p = (sales / budget_spent) if budget_spent > 0 else 0
     s_rate_p = (budget_spent / budget_set * 100) if budget_set > 0 else 0
     profit_est_p = (laba_kotor_p * orders) - budget_spent if orders > 0 else -budget_spent
-    cpc_p = budget_spent / clicks if clicks > 0 else 0
     
-    # Simpan ke session state
     st.session_state.analysis_done = True
     st.session_state.last_ctr = ctr_p
     st.session_state.last_roas = roas_akt_p
@@ -605,7 +588,6 @@ if analize_clicked:
     
     st.markdown('<div class="analytics-wrapper">', unsafe_allow_html=True)
     
-    # Metric Cards
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">📈 CTR</p><h2 style="color:#FFFFFF; margin:0;">{ctr_p:.2f}%</h2><p style="color:#94A3B8; font-size:0.8rem;">{"✅ Normal" if ctr_p >= 2 else "⚠️ Rendah"}</p></div>', unsafe_allow_html=True)
@@ -617,7 +599,6 @@ if analize_clicked:
     with m4:
         st.markdown(f'<div class="premium-card"><p style="color:#94A3B8; margin:0;">🎯 BEP</p><h2 style="color:#FFFFFF; margin:0;">{roas_bep_p:.2f}x</h2><p style="color:#94A3B8; font-size:0.8rem;">{"✅ Aman" if roas_akt_p >= roas_bep_p else "⚠️ Dibawah"}</p></div>', unsafe_allow_html=True)
     
-    # ==================== AI SUMMARY ====================
     if GEMINI_API_KEY:
         with st.spinner("🤖 AI sedang menganalisis..."):
             summary_prompt = f"""Berdasarkan data iklan:
@@ -631,10 +612,9 @@ if analize_clicked:
 Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah iklan UNTUNG atau RUGI, dan rekomendasi singkat.
 """
             ai_summary = call_gemini_api(summary_prompt)
-            if ai_summary:
+            if ai_summary and not ai_summary.startswith("❌"):
                 st.markdown(f'<div class="premium-card"><h3 style="color:#FFD700;">🤖 AI Insight</h3><p style="font-size:1rem;">{ai_summary}</p></div>', unsafe_allow_html=True)
     
-    # ==================== REKOMENDASI 1-5 ====================
     st.markdown("### 🎯 Rekomendasi Strategis")
     
     rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna = generate_rekomendasi(
@@ -642,7 +622,6 @@ Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah i
         budget_set, target_roas_p, budget_spent, ctr_p
     )
     
-    # Pilih class berdasarkan warna
     if warna == "danger":
         rekom_class = "rekom-danger"
     elif warna == "warning":
@@ -665,7 +644,6 @@ Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah i
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== PREDIKSI SCALE ====================
 if st.session_state.analysis_done and st.session_state.last_roas >= st.session_state.last_roas_bep * 1.2:
     st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">📈 Prediksi Scale</h3>', unsafe_allow_html=True)
     new_budget_pred = st.session_state.last_budget_set * 1.3
@@ -681,7 +659,6 @@ if st.session_state.analysis_done and st.session_state.last_roas >= st.session_s
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== PREDIKSI 7 HARI ====================
 if st.session_state.analysis_done and st.session_state.last_roas > 0:
     st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">📊 Prediksi 7 Hari ke Depan</h3>', unsafe_allow_html=True)
     
@@ -698,7 +675,6 @@ if st.session_state.analysis_done and st.session_state.last_roas > 0:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== REKOMENDASI BUDGET BESOK ====================
 if st.session_state.analysis_done and st.session_state.last_roas > 0:
     st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">💰 Rekomendasi Budget Besok</h3>', unsafe_allow_html=True)
     
@@ -722,7 +698,6 @@ if st.session_state.analysis_done and st.session_state.last_roas > 0:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== TANYA JAWAB AI ====================
 st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">💬 Tanya AI (Konsultasi Iklan)</h3>', unsafe_allow_html=True)
 user_question = st.text_input("Pertanyaan kamu:", placeholder="Contoh: ROAS saya turun drastis, harus gimana?", key="chatbot_question")
 if st.button("🤖 Tanya AI", use_container_width=True, key="ask_ai"):
@@ -735,7 +710,7 @@ Pertanyaan: {user_question}
 Jawab dengan bahasa Indonesia yang ramah, profesional, dan berikan solusi praktis.
 """
             answer = call_gemini_api(prompt)
-            if answer:
+            if answer and not answer.startswith("❌"):
                 st.info(f"💡 {answer}")
             else:
                 st.warning("Maaf, AI sedang sibuk. Coba lagi nanti.")
@@ -743,7 +718,6 @@ Jawab dengan bahasa Indonesia yang ramah, profesional, dan berikan solusi prakti
         st.warning("Masukkan pertanyaan dulu.")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== GENERATOR ====================
 st.markdown("<h2 class='gold-header'>✨ Elite Copywriter Lab</h2>", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook Video", "#️⃣ Hashtag"])
@@ -755,7 +729,7 @@ with tab1:
         with st.spinner("🧠 AI sedang merancang judul..."):
             if p_name:
                 res = call_gemini_api(f"Buat 5 judul untuk '{p_name}' di Shopee. Judul menarik, ada emoji, fokus manfaat. Output per baris.")
-                if res:
+                if res and not res.startswith("❌"):
                     st.code(res, language="text")
                 else:
                     st.code(f"🔥 {p_name} - Kualitas Premium\n💯 {p_name} BEST SELLER\n✨ WAJIB PUNYA! {p_name}", language="text")
@@ -772,7 +746,7 @@ with tab2:
             if p_name_desc:
                 prompt = f"Buat deskripsi untuk '{p_name_desc}' di Shopee. Manfaat: {manfaat}. Gunakan emoji, ajakan beli."
                 res = call_gemini_api(prompt)
-                if res:
+                if res and not res.startswith("❌"):
                     st.code(res, language="markdown")
                 else:
                     st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}\n🔥 Promo terbatas!", language="markdown")
@@ -789,7 +763,7 @@ with tab3:
             if p_name_hook:
                 prompt = f"Buat 5 hook untuk '{p_name_hook}' di TikTok. Gaya: {gaya}. Hook 3 detik pertama."
                 res = call_gemini_api(prompt)
-                if res:
+                if res and not res.startswith("❌"):
                     for line in res.strip().split('\n'):
                         if line.strip():
                             st.markdown(f"- 🎬 {line.strip()}")
@@ -810,7 +784,7 @@ with tab4:
             if p_name_hash:
                 prompt = f"Buat 15 hashtag TikTok untuk '{p_name_hash}', niche {niche_hash}. Format: #fyp #viral #namaproduk"
                 res = call_gemini_api(prompt)
-                if res:
+                if res and not res.startswith("❌"):
                     st.code(res, language="text")
                 else:
                     st.code("#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon #murah #berkualitas #premium", language="text")
