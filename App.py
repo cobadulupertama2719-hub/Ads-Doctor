@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import hashlib
 import requests
 import json
+import io
 
 # 1. SET PAGE CONFIG (SIDEBAR EXPANDED)
 st.set_page_config(
@@ -14,14 +15,21 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. CSS untuk menyembunyikan header default Streamlit
+# 2. CSS untuk menyembunyikan header default Streamlit (TAPI TOMBOL SIDEBAR TETAP ADA)
 hide_st_style = """
 <style>
 #MainMenu {visibility: hidden;}
-header {visibility: hidden;}
+/* header {visibility: hidden;} */  /* ← DIHAPUS AGAR TOMBOL SIDEBAR MUNCUL */
 footer {visibility: hidden;}
 .stAppDeployButton {display:none;}
 [data-testid="stToolbar"] {display:none;}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .premium-card { padding: 15px !important; }
+    .gold-header { font-size: 1.8rem !important; }
+    .stButton button { font-size: 0.9rem !important; }
+}
 </style>
 """
 st.markdown(hide_st_style, unsafe_allow_html=True)
@@ -255,6 +263,10 @@ def apply_premium_style():
         border: 2px solid rgba(255, 255, 255, 0.3) !important;
         cursor: pointer !important;
         transition: all 0.3s ease !important;
+        z-index: 999999 !important;
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
     }
 
     button[kind="header"]:hover {
@@ -278,6 +290,14 @@ def apply_premium_style():
     [data-testid="stSidebarOverlay"] {
         background: rgba(0, 0, 0, 0.7) !important;
         backdrop-filter: blur(5px) !important;
+    }
+
+    /* Tooltip styling */
+    .tooltip-icon {
+        color: #00E5A0;
+        cursor: help;
+        margin-left: 5px;
+        font-size: 0.8rem;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -311,6 +331,8 @@ if "last_target_roas" not in st.session_state:
     st.session_state["last_target_roas"] = 0
 if "last_budget_spent" not in st.session_state: 
     st.session_state["last_budget_spent"] = 0
+if "api_error" not in st.session_state:
+    st.session_state["api_error"] = None
 
 ADMIN_USERNAME = st.secrets.get("ADMIN_USERNAME", "arkidigital")
 ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", "Arkidigital2026")
@@ -324,57 +346,47 @@ def format_rp(angka):
         return f"Rp{angka/1000:.0f}RB"
     return f"Rp{angka:,.0f}"
 
-# ==================== FUNGSI CALL GEMINI API ====================
+# ==================== FUNGSI CALL GEMINI API (DENGAN ERROR DI HALAMAN UTAMA) ====================
 def call_gemini_api(prompt):
-    """Panggil Gemini API via HTTP - DEBUG VERSION"""
+    """Panggil Gemini API via HTTP - ERROR TAMPIL DI HALAMAN UTAMA"""
     if not GEMINI_API_KEY:
-        return "❌ API Key tidak ditemukan di secrets"
+        st.session_state.api_error = "❌ API Key tidak ditemukan! Periksa secrets.toml"
+        return None
     
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
-    headers = {
-        "Content-Type": "application/json"
-    }
-    
-    data = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt}
-                ]
-            }
-        ]
-    }
+    headers = {"Content-Type": "application/json"}
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
     
     try:
         response = requests.post(url, json=data, headers=headers, timeout=30)
-        
-        # TAMPILKAN DETAIL ERROR DI SIDEBAR
-        st.sidebar.markdown("---")
-        st.sidebar.markdown("**🤖 API Debug Info:**")
-        st.sidebar.write(f"Status Code: {response.status_code}")
         
         if response.status_code == 200:
             result = response.json()
             try:
                 text = result["candidates"][0]["content"]["parts"][0]["text"]
-                st.sidebar.success("✅ API berhasil!")
+                st.session_state.api_error = None
                 return text
             except Exception as e:
-                st.sidebar.error(f"Parse error: {e}")
-                return f"❌ Gagal parsing response: {e}"
+                st.session_state.api_error = f"⚠️ Gagal parsing response: {e}"
+                return None
         else:
-            st.sidebar.error(f"HTTP {response.status_code}")
-            st.sidebar.write(f"Response: {response.text[:300]}")
-            return f"❌ API Error {response.status_code}"
+            error_msg = f"⚠️ API Error {response.status_code}"
+            if response.status_code == 403:
+                error_msg += " - API Key tidak valid atau expired!"
+            elif response.status_code == 429:
+                error_msg += " - Rate limit! Coba lagi nanti."
+            elif response.status_code == 404:
+                error_msg += " - Model tidak ditemukan."
+            st.session_state.api_error = error_msg
+            return None
             
     except requests.exceptions.Timeout:
-        st.sidebar.error("⏰ Timeout (30 detik)")
-        return "❌ Timeout, coba lagi"
+        st.session_state.api_error = "⏰ Timeout! API terlalu lama merespon (30 detik)"
+        return None
     except Exception as e:
-        st.sidebar.error(f"Exception: {type(e).__name__}")
-        st.sidebar.write(f"Detail: {str(e)[:200]}")
-        return f"❌ Error: {str(e)[:100]}"
+        st.session_state.api_error = f"⚠️ Error: {str(e)[:100]}"
+        return None
 
 # ==================== DATABASE PRODUK ====================
 def save_product(p):
@@ -390,6 +402,22 @@ def save_product(p):
 def delete_product(nama):
     products = st.session_state.products
     st.session_state.products = [p for p in products if p["nama"] != nama]
+
+def export_products():
+    if st.session_state.products:
+        df = pd.DataFrame(st.session_state.products)
+        return df.to_csv(index=False).encode('utf-8')
+    return None
+
+def import_products(file):
+    try:
+        df = pd.read_csv(file)
+        for _, row in df.iterrows():
+            save_product(row.to_dict())
+        return True
+    except Exception as e:
+        st.error(f"Gagal import: {e}")
+        return False
 
 # ==================== FUNGSI REKOMENDASI ====================
 def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_set, target_roas, budget_spent, ctr):
@@ -480,7 +508,18 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
 
-**Solusi:** Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
+**Solusi AI:** 
+"""
+        # Tambahan saran AI jika API tersedia
+        if GEMINI_API_KEY:
+            prompt_ctr = f"CTR iklan hanya {ctr:.1f}%. Berikan 3 saran singkat untuk meningkatkan CTR. Jawab dalam 30 kata."
+            saran_ctr = call_gemini_api(prompt_ctr)
+            if saran_ctr:
+                rekom_tindakan += f"\n💡 {saran_ctr}\n"
+            else:
+                rekom_tindakan += "Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."
+        else:
+            rekom_tindakan += "Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."
     
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
@@ -513,6 +552,10 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==================== 4. MAIN PREMIUM DASHBOARD ====================
+# Tampilkan error API di halaman utama jika ada
+if st.session_state.api_error:
+    st.warning(f"{st.session_state.api_error}")
+
 st.markdown('<h1 class="gold-header">🩺 ADVERTISING COMMAND CENTER</h1>', unsafe_allow_html=True)
 
 # ==================== PRODUK DATABASE DI DASHBOARD UTAMA ====================
@@ -543,8 +586,35 @@ with st.expander("📦 **Database Produk**", expanded=False):
     
     with col_prod2:
         st.markdown("### 📋 Produk Tersimpan")
-        if st.session_state.products:
-            for idx, prod in enumerate(st.session_state.products):
+        
+        # Search filter
+        search_term = st.text_input("🔍 Cari produk", placeholder="Ketik nama produk...")
+        
+        # Export/Import buttons
+        col_exp, col_imp = st.columns(2)
+        with col_exp:
+            csv_data = export_products()
+            if csv_data:
+                st.download_button(
+                    label="📥 Export CSV",
+                    data=csv_data,
+                    file_name="produk_database.csv",
+                    mime="text/csv"
+                )
+        with col_imp:
+            uploaded_file = st.file_uploader("📤 Import CSV", type="csv")
+            if uploaded_file:
+                if import_products(uploaded_file):
+                    st.success("Import berhasil!")
+                    st.rerun()
+        
+        # Filter produk berdasarkan search
+        filtered_products = st.session_state.products
+        if search_term:
+            filtered_products = [p for p in st.session_state.products if search_term.lower() in p["nama"].lower()]
+        
+        if filtered_products:
+            for idx, prod in enumerate(filtered_products):
                 col_a, col_b = st.columns([3, 1])
                 with col_a:
                     st.markdown(f"**{prod['nama']}**  \nBEP: {prod['roas_bep']:.1f}x | Profit: Rp{prod['laba_kotor']:,.0f}")
@@ -554,7 +624,10 @@ with st.expander("📦 **Database Produk**", expanded=False):
                         st.rerun()
                 st.markdown("---")
         else:
-            st.info("Belum ada produk tersimpan. Silakan tambah produk baru.")
+            if search_term:
+                st.info(f"Tidak ada produk dengan nama '{search_term}'")
+            else:
+                st.info("Belum ada produk tersimpan. Silakan tambah produk baru.")
 
 # ==================== SIDEBAR (MINIMAL) ====================
 with st.sidebar:
@@ -563,6 +636,21 @@ with st.sidebar:
     if st.button("🚪 LOGOUT", use_container_width=True):
         st.session_state.clear()
         st.rerun()
+    
+    # Tooltip / Onboarding
+    with st.expander("ℹ️ Panduan Cepat", expanded=False):
+        st.markdown("""
+        **📌 Langkah Penggunaan:**
+        1. Masukkan data produk di **ROAS BEP Calculator**
+        2. Input performa iklan di **Ad Performance Matrix**
+        3. Klik **RUN DEEP ANALYTICS**
+        4. Lihat rekomendasi strategis
+        
+        **🎯 Fitur Lain:**
+        - 💬 Tanya AI untuk konsultasi
+        - ✨ Generator copywriting
+        - 📦 Database produk
+        """)
 
 # ==================== FINANSIAL AUDIT ====================
 col_calc, col_audit = st.columns([2, 1])
@@ -622,6 +710,7 @@ with col_btn2:
     analize_clicked = st.button("⚡ RUN DEEP ANALYTICS", use_container_width=True, key="run_analytics")
 
 if analize_clicked:
+    # Validasi division by zero
     ctr_p = (clicks / impressions * 100) if impressions > 0 else 0
     roas_akt_p = (sales / budget_spent) if budget_spent > 0 else 0
     s_rate_p = (budget_spent / budget_set * 100) if budget_set > 0 else 0
@@ -665,8 +754,10 @@ if analize_clicked:
 Buat kesimpulan SINGKAT (maks 60 kata) dalam bahasa Indonesia. Sebutkan apakah iklan UNTUNG atau RUGI, dan rekomendasi singkat.
 """
             ai_summary = call_gemini_api(summary_prompt)
-            if ai_summary and not ai_summary.startswith("❌"):
+            if ai_summary:
                 st.markdown(f'<div class="premium-card"><h3 style="color:#FFD700;">🤖 AI Insight</h3><p style="font-size:1rem;">{ai_summary}</p></div>', unsafe_allow_html=True)
+    else:
+        st.info("💡 Tips: Tambahkan GEMINI_API_KEY di secrets untuk mendapatkan analisis AI.")
     
     st.markdown("### 🎯 Rekomendasi Strategis")
     
@@ -767,7 +858,7 @@ Pertanyaan: {user_question}
 Jawab dengan bahasa Indonesia yang ramah, profesional, dan berikan solusi praktis.
 """
             answer = call_gemini_api(prompt)
-            if answer and not answer.startswith("❌"):
+            if answer:
                 st.info(f"💡 {answer}")
             else:
                 st.warning("Maaf, AI sedang sibuk. Coba lagi nanti.")
@@ -787,7 +878,7 @@ with tab1:
         with st.spinner("🧠 AI sedang merancang judul..."):
             if p_name:
                 res = call_gemini_api(f"Buat 5 judul untuk '{p_name}' di Shopee. Judul menarik, ada emoji, fokus manfaat. Output per baris.")
-                if res and not res.startswith("❌"):
+                if res:
                     st.code(res, language="text")
                 else:
                     st.code(f"🔥 {p_name} - Kualitas Premium\n💯 {p_name} BEST SELLER\n✨ WAJIB PUNYA! {p_name}", language="text")
@@ -804,7 +895,7 @@ with tab2:
             if p_name_desc:
                 prompt = f"Buat deskripsi untuk '{p_name_desc}' di Shopee. Manfaat: {manfaat}. Gunakan emoji, ajakan beli."
                 res = call_gemini_api(prompt)
-                if res and not res.startswith("❌"):
+                if res:
                     st.code(res, language="markdown")
                 else:
                     st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium'}\n🔥 Promo terbatas!", language="markdown")
@@ -821,7 +912,7 @@ with tab3:
             if p_name_hook:
                 prompt = f"Buat 5 hook untuk '{p_name_hook}' di TikTok. Gaya: {gaya}. Hook 3 detik pertama."
                 res = call_gemini_api(prompt)
-                if res and not res.startswith("❌"):
+                if res:
                     for line in res.strip().split('\n'):
                         if line.strip():
                             st.markdown(f"- 🎬 {line.strip()}")
@@ -842,10 +933,22 @@ with tab4:
             if p_name_hash:
                 prompt = f"Buat 15 hashtag TikTok untuk '{p_name_hash}', niche {niche_hash}. Format: #fyp #viral #namaproduk"
                 res = call_gemini_api(prompt)
-                if res and not res.startswith("❌"):
+                if res:
                     st.code(res, language="text")
                 else:
                     st.code("#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon #murah #berkualitas #premium", language="text")
             else:
                 st.warning("Masukkan nama produk.")
     st.markdown('</div>', unsafe_allow_html=True)
+
+# ==================== FOOTER ====================
+st.markdown("""
+<div style="text-align: center; padding: 40px 20px 20px 20px; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1);">
+    <p style="color: #94A3B8; font-size: 0.8rem;">
+        Powered by <span style="color: #00E5A0; font-weight: bold;">Arkidigital</span> © 2025
+    </p>
+    <p style="color: #64748B; font-size: 0.7rem;">
+        Advertising Command Center | All Rights Reserved
+    </p>
+</div>
+""", unsafe_allow_html=True)
