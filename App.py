@@ -20,7 +20,7 @@ st.set_page_config(
 hide_st_style = """
 <style>
 #MainMenu {visibility: hidden;}
-/* header {visibility: hidden;} */  /* DIHAPUS AGAR TOMBOL SIDEBAR MUNCUL */
+/* header {visibility: hidden;} */
 footer {visibility: hidden;}
 .stAppDeployButton {display:none;}
 [data-testid="stToolbar"] {display:none;}
@@ -40,6 +40,10 @@ footer {visibility: hidden;}
     margin-top: 0 !important;
 }
 
+.st-emotion-cache-1cypcdb {
+    padding-top: 0 !important;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .premium-card { padding: 15px !important; }
@@ -48,7 +52,6 @@ footer {visibility: hidden;}
 }
 </style>
 """
-st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # ==================== 1. ULTRA-PREMIUM UI CONFIGURATION ====================
 def apply_premium_style():
