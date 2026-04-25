@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="Advertising Command Center",
     page_icon="🩺",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # 2. CSS
@@ -25,43 +25,20 @@ footer {visibility: hidden;}
 .stAppDeployButton {display:none;}
 [data-testid="stToolbar"] {display:none;}
 
-/* TAMPILKAN TOMBOL SIDEBAR */
-button[kind="header"] {
-    visibility: visible !important;
-    display: flex !important;
-    position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
-    z-index: 999999 !important;
-    background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
-    border-radius: 50% !important;
-    width: 48px !important;
-    height: 48px !important;
-    box-shadow: 0 4px 15px rgba(0, 229, 160, 0.5) !important;
-    border: 2px solid rgba(255, 255, 255, 0.3) !important;
-    cursor: pointer !important;
-}
-
-button[kind="header"]:hover {
-    transform: scale(1.05) !important;
-    background: linear-gradient(135deg, #00FFB0 0%, #00c890 100%) !important;
-}
-
-button[kind="header"] svg {
-    fill: #020617 !important;
-    stroke: #020617 !important;
-    width: 24px !important;
-    height: 24px !important;
-}
-
-/* SIDEBAR FULL HEIGHT */
+/* HILANGKAN SIDEBAR SEPENUHNYA */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
-    border-right: 2px solid rgba(0, 229, 160, 0.3) !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    top: 0 !important;
-    height: 100vh !important;
+    display: none !important;
+}
+
+[data-testid="stSidebarContent"] {
+    display: none !important;
+}
+
+/* MAIN CONTENT MELEBAR FULL */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 80px;
+    max-width: 100%;
 }
 
 /* BOTTOM NAVIGATION BAR */
@@ -71,8 +48,8 @@ button[kind="header"] svg {
     left: 0;
     right: 0;
     background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
-    border-top: 1px solid rgba(0, 229, 160, 0.3);
-    padding: 10px 0;
+    border-top: 1px solid rgba(0, 229, 160, 0.5);
+    padding: 8px 0;
     z-index: 99999;
     display: flex;
     justify-content: space-around;
@@ -82,9 +59,11 @@ button[kind="header"] svg {
 .nav-item {
     text-align: center;
     cursor: pointer;
-    padding: 5px 15px;
+    padding: 8px 20px;
     border-radius: 30px;
     transition: all 0.3s ease;
+    background: transparent;
+    border: none;
 }
 
 .nav-item:hover {
@@ -117,6 +96,32 @@ button[kind="header"] svg {
     .stButton button { font-size: 0.9rem !important; }
     .nav-label { font-size: 0.6rem; }
     .nav-icon { font-size: 1.2rem; }
+    .nav-item { padding: 5px 10px; }
+}
+
+/* Footer styling */
+.custom-footer {
+    text-align: center;
+    padding: 30px 20px 20px 20px;
+    margin-top: 40px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
 }
 </style>
 """
@@ -183,12 +188,11 @@ def apply_premium_style():
         background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
         color: #020617 !important;
         font-weight: 800 !important;
-        font-size: 1.2rem !important;
-        padding: 12px 30px !important;
+        font-size: 1rem !important;
+        padding: 10px 20px !important;
         border-radius: 40px !important;
         border: none !important;
         transition: all 0.3s ease !important;
-        width: 100% !important;
         box-shadow: 0 5px 15px rgba(0, 229, 160, 0.3) !important;
     }
     
@@ -205,12 +209,20 @@ def apply_premium_style():
         margin: 15px 0;
     }
     
+    .rekom-danger h3, .rekom-danger p, .rekom-danger strong {
+        color: #fecaca !important;
+    }
+    
     .rekom-warning {
         background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
         border-left: 5px solid #f59e0b;
         border-radius: 16px;
         padding: 20px;
         margin: 15px 0;
+    }
+    
+    .rekom-warning h3, .rekom-warning p, .rekom-warning strong {
+        color: #fde68a !important;
     }
     
     .rekom-success {
@@ -221,12 +233,20 @@ def apply_premium_style():
         margin: 15px 0;
     }
     
+    .rekom-success h3, .rekom-success p, .rekom-success strong {
+        color: #a7f3d0 !important;
+    }
+    
     .rekom-info {
         background: linear-gradient(135deg, #0c4a6e 0%, #0284c7 100%);
         border-left: 5px solid #3b82f6;
         border-radius: 16px;
         padding: 20px;
         margin: 15px 0;
+    }
+    
+    .rekom-info h3, .rekom-info p, .rekom-info strong {
+        color: #bae6fd !important;
     }
     
     .generator-card {
@@ -267,6 +287,33 @@ def apply_premium_style():
         border-radius: 20px;
         padding: 20px;
         margin-top: 20px;
+    }
+
+    /* GMV Max styling */
+    .gmv-card {
+        background: rgba(0, 229, 160, 0.05);
+        border-left: 3px solid #00E5A0;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .gmv-highlight {
+        background: rgba(0, 229, 160, 0.15);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .gmv-quote {
+        font-size: 1.2rem;
+        font-style: italic;
+        color: #00E5A0;
+        text-align: center;
+        padding: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -378,17 +425,12 @@ def import_products(file):
 
 # ==================== FUNGSI REKOMENDASI ====================
 def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_set, target_roas, budget_spent, ctr):
-    """Menghasilkan rekomendasi berdasarkan aturan 1-5"""
     rekom_tindakan = ""
     rekom_roas = target_roas
     rekom_budget = budget_set
     prioritas = ""
     warna = "info"
     
-    # DEBUG: tampilkan parameter (hapus nanti)
-    # st.write(f"Debug: roas={roas_aktual:.2f}, bep={roas_bep:.2f}, s_rate={s_rate:.2f}, orders={orders}")
-    
-    # PRIORITAS 1: Banyak klik, budget habis, tapi 0 order
     if clicks > 50 and s_rate >= 80 and orders == 0:
         prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
@@ -397,17 +439,11 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 📊 Data: {clicks} klik, budget terserap {s_rate:.0f}%, tapi 0 order.
 
-**Penyebab:** Produk belum layak iklan.
-
 **Yang harus dilakukan:**
-1. Cek harga produk — bandingkan dengan kompetitor
+1. Cek harga produk dengan kompetitor
 2. Tambah review & rating (target 10-20 review positif)
-3. Perbaiki deskripsi — fokus ke MANFAAT
-4. Pastikan stok aman
-
-**Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**"""
+3. Perbaiki deskripsi — fokus ke MANFAAT"""
     
-    # PRIORITAS 4: Budget habis (>=85%) DAN ROAS 20% di atas BEP → SCALE
     elif s_rate >= 85 and roas_aktual >= roas_bep * 1.2:
         prioritas = "🟢 PRIORITAS 4 - SIAP SCALE"
         warna = "success"
@@ -421,9 +457,8 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 ✅ Naikkan **BUDGET 30%** dari {format_rp(budget_set)} menjadi {format_rp(rekom_budget)}
 ✅ **PERTAHANKAN** target ROAS di {target_roas:.1f}x
 
-⏰ **Tunggu 3 hari** tanpa perubahan apapun untuk melihat hasil scale."""
+⏰ **Tunggu 3 hari** tanpa perubahan apapun."""
     
-    # PRIORITAS 2: ROAS untung TAPI budget masih banyak sisa (<85%)
     elif roas_aktual >= roas_bep and s_rate < 85:
         prioritas = "🟡 PRIORITAS 2 - OPTIMASI BUDGET"
         warna = "warning"
@@ -433,13 +468,12 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 ✅ ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (PROFIT)
 📊 Budget terserap HANYA {s_rate:.0f}% = masih sisa Rp{budget_set - budget_spent:,.0f}
 
-**SOLUSI AGAR BUDGET HABIS & ORDER MAKSIMAL:**
+**SOLUSI:**
 ✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
 ✅ **PERTAHANKAN** budget tetap {format_rp(budget_set)}
 
-⏰ **Tunggu 3 hari** dengan setting baru ini, budget akan terserap lebih cepat."""
+⏰ **Tunggu 3 hari** dengan setting baru ini."""
     
-    # PRIORITAS 3: ROAS di bawah BEP (RUGI)
     elif roas_aktual < roas_bep and roas_aktual > 0:
         prioritas = "🔴 PRIORITAS 3 - IKLAN RUGI (ROAS < BEP)"
         warna = "danger"
@@ -449,15 +483,12 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 📉 ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
 
-**SOLUSI AGAR TIDAK RUGI:**
+**SOLUSI:**
 ✅ Naikkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
-🔻 Turunkan budget **30%** dari {format_rp(budget_set)} menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian
-
-⏰ **Tunggu 3 hari** lalu evaluasi ulang."""
+🔻 Turunkan budget **30%** dari {format_rp(budget_set)} menjadi {format_rp(rekom_budget)}"""
     
-    # PRIORITAS 5: Performa sehat (ROAS >= BEP)
-    elif roas_aktual >= roas_bep:
-        prioritas = "🟢 PRIORITAS 5 - PERFORMA SEHAT, PANTAU SAJA"
+    else:
+        prioritas = "🟢 PRIORITAS 5 - PERFORMA SEHAT"
         rekom_tindakan = f"""✅ **PERFORMA IKLAN SEHAT**
 
 📈 ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (PROFIT)
@@ -465,33 +496,10 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 
 **REKOMENDASI:**
 ✅ Pertahankan setting saat ini
-⏰ Pantau selama **3-5 hari** tanpa perubahan
-
-📊 Jika budget habis cepat (<24 jam) → iklan siap naik scale
-📊 Jika budget tidak habis → lakukan optimasi target ROAS"""
+⏰ Pantau selama **3-5 hari** tanpa perubahan"""
     
-    # Default fallback
-    else:
-        prioritas = "ℹ️ PERLU DATA LEBIH LENGKAP"
-        rekom_tindakan = f"""📊 **Data Belum Cukup**
-
-Mohon isi data performa iklan dengan lengkap:
-- Pastikan Impressions > 0
-- Pastikan Budget Spent > 0
-- Pastikan Budget Setting > 0
-
-Setelah data lengkap, klik RUN ANALYTICS lagi."""
-    
-    # Tambahan saran CTR rendah
-    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan and "tidak ditemukan" not in rekom_tindakan:
-        rekom_tindakan += f"""
-
----
-📸 **MASALAH CTR RENDAH!**
-
-CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
-
-**Solusi:** Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
+    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan:
+        rekom_tindakan += f"\n\n📸 CTR {ctr:.1f}% < 2% → Ganti visual iklan."
     
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
@@ -530,55 +538,24 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ==================== SIDEBAR ====================
-with st.sidebar:
-    st.markdown('<div style="text-align:center; background:rgba(0,229,160,0.2); padding:15px; border-radius:40px; margin-bottom:20px;"><span style="color:#00E5A0; font-weight:bold;">⭐ PREMIUM MEMBER ⭐</span></div>', unsafe_allow_html=True)
-    
-    if st.button("🚪 LOGOUT", use_container_width=True):
-        st.session_state.clear()
-        st.rerun()
-    
-    with st.expander("ℹ️ Panduan Cepat", expanded=False):
-        st.markdown("""
-        **📌 Langkah Penggunaan:**
-        1. Masukkan data produk di **ROAS BEP Calculator**
-        2. Input performa iklan di **Ad Performance Matrix**
-        3. Klik **RUN DEEP ANALYTICS**
-        """)
-
 # ==================== BOTTOM NAVIGATION ====================
-def render_bottom_nav():
-    pages = {
-        "dashboard": {"icon": "🏠", "label": "Dashboard"},
-        "gmvmax": {"icon": "🚀", "label": "GMV Max"},
-        "generator": {"icon": "✨", "label": "Generator"},
-        "database": {"icon": "📦", "label": "Database"}
-    }
-    
-    nav_html = '<div class="bottom-nav">'
-    for page_id, page_info in pages.items():
-        active_class = 'active' if st.session_state.current_page == page_id else ''
-        nav_html += f"""
-        <div class="nav-item {active_class}" onclick="parent.postMessage({{type: 'streamlit:setComponentValue', value: '{page_id}'}}, '*')">
-            <div class="nav-icon">{page_info['icon']}</div>
-            <div class="nav-label">{page_info['label']}</div>
-        </div>
-        """
-    nav_html += '</div>'
-    
-    st.markdown(nav_html, unsafe_allow_html=True)
-    
-    # JavaScript untuk handle klik
-    st.markdown("""
-    <script>
-    window.addEventListener('message', function(e) {
-        if (e.data.type === 'streamlit:setComponentValue') {
-            // Ini akan trigger rerun di Streamlit
-            console.log('Navigasi ke:', e.data.value);
-        }
-    });
-    </script>
-    """, unsafe_allow_html=True)
+nav_cols = st.columns(4)
+nav_items = [
+    {"page": "dashboard", "icon": "🏠", "label": "Dashboard"},
+    {"page": "gmvmax", "icon": "🚀", "label": "GMV Max"},
+    {"page": "generator", "icon": "✨", "label": "Generator"},
+    {"page": "database", "icon": "📦", "label": "Database"}
+]
+
+for idx, nav in enumerate(nav_items):
+    with nav_cols[idx]:
+        is_active = st.session_state.current_page == nav["page"]
+        button_style = "primary" if is_active else "secondary"
+        if st.button(f"{nav['icon']} {nav['label']}", key=f"nav_{nav['page']}", use_container_width=True):
+            st.session_state.current_page = nav["page"]
+            st.rerun()
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 # ==================== HALAMAN DASHBOARD ====================
 def render_dashboard():
@@ -708,89 +685,205 @@ def render_dashboard():
 # ==================== HALAMAN GMV MAX ====================
 def render_gmvmax():
     st.markdown('<div class="premium-card"><h3 style="color:#FFD700;">🚀 GMV MAX - Panduan Strategi Iklan untuk Pemula</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#94A3B8;">Panduan lengkap memahami algoritma GMV Max TikTok & Shopee</p>', unsafe_allow_html=True)
     
+    # Poin 1
+    with st.expander("⚙️ 1. STRUKTUR DASAR ALGORITMA (INPUT-PROCESS-OUTPUT)", expanded=False):
+        st.markdown("""
+        **GMV Max bekerja pakai 3 layer utama:**
+        
+        **📥 INPUT** (yang kamu kasih ke sistem)
+        - Budget
+        - Target ROAS / ROI
+        - Produk (harga, margin)
+        - Konten / listing (CTR & CVR)
+        - Data pixel (event pembelian)
+        
+        **⚙️ PROCESS** (yang sistem lakukan)
+        - Distribusi iklan ke banyak audience
+        - Mengukur respon: CTR (klik), CVR (beli), CPA (biaya per order)
+        - Membandingkan dengan target ROAS
+        
+        **📤 OUTPUT** (hasil akhir)
+        - Spend terserap / tidak
+        - Order masuk / tidak
+        - ROAS naik / turun
+        
+        > 🔥 **Intinya:** GMV Max = sistem probabilitas pembeli, bukan targeting manual
+        """)
+    
+    # Poin 2
+    with st.expander("🧠 2. LOGIKA INTI ALGORITMA (CTR, CVR, CPA)", expanded=False):
+        st.markdown("""
+        **Cara AI mikir:** "Dari semua orang yang lihat iklan ini, siapa yang paling mungkin beli dengan biaya murah?"
+        
+        **Algoritma pakai 3 sinyal utama:**
+        
+        | Sinyal | Fungsi |
+        |--------|--------|
+        | **CTR** | "Apakah orang tertarik?" → Tinggi = disebar luas / Rendah = dipersempit |
+        | **CVR** | "Apakah orang beli?" → Klik tinggi tapi gak beli = produk lemah |
+        | **CPA** | "Berapa biaya dapetin 1 order?" → **INI YANG PALING PENTING** |
+        
+        > 🔥 **Rumus dalam kepala algoritma:** Profit ≈ Revenue – Cost, tapi sistem pakai pendekatan ROAS target vs CPA real
+        """)
+    
+    # Poin 3
+    with st.expander("🎯 3. PERAN ROAS DI DALAM ALGORITMA", expanded=False):
+        st.markdown("""
+        **Banyak orang salah kaprah!** ROAS itu bukan target profit, tapi **constraint (batasan sistem)**.
+        
+        **Cara sistem membaca ROAS:**
+        
+        | Setting ROAS | Perilaku Algoritma |
+        |--------------|-------------------|
+        | **Tinggi** | Sistem cari buyer yang "paling pasti beli" → traffic kecil tapi mahal kualitas |
+        | **Rendah** | Sistem lebih agresif → traffic luas tapi risk tinggi |
+        
+        > 🔥 **Kesimpulan:** ROAS = filter kualitas traffic
+        """)
+    
+    # Poin 4
+    with st.expander("💸 4. HUBUNGAN ROAS vs BUDGET (MEKANISME DISTRIBUSI)", expanded=False):
+        st.markdown("""
+        **Cara sistem ambil keputusan:**
+        
+        1. Cek peluang beli (dari data historis)
+        2. Bandingkan dengan target ROAS
+        3. Kalau lolos → iklan ditampilkan / Kalau tidak → skip audience itu
+        
+        | Setting | Respon Algoritma |
+        |---------|------------------|
+        | ROAS tinggi | selektif |
+        | ROAS rendah | eksplorasi |
+        | Budget besar | butuh audience luas |
+        | Budget kecil | distribusi terbatas |
+        
+        > 🔥 **Insight:** Budget besar + ROAS tinggi = sistem "bingung" (gak bisa spend)
+        """)
+    
+    # Poin 5
+    with st.expander("🔄 5. LEARNING PHASE (PROSES BELAJAR AI)", expanded=False):
+        st.markdown("""
+        **Apa yang terjadi di dalam?**
+        
+        Algoritma:
+        - Test banyak audience
+        - Test banyak placement
+        - Kumpulin data CTR & CVR
+        - Cari pola pembeli
+        
+        **Kenapa performa naik turun?** Karena sistem lagi: eksplorasi → gagal → refine → ulangi
+        
+        > 🔥 **Syarat stabil:** Conversion cukup (±30–50), tidak sering diubah, budget cukup untuk sampling
+        
+        **❌ Kalau kamu ganggu:** Edit ROAS, ganti budget drastis, pause terlalu cepat → Model reset → balik ke nol
+        """)
+    
+    # Poin 6
+    with st.expander("🧪 6. MEKANISME OPTIMISASI OTOMATIS", expanded=False):
+        st.markdown("""
+        Setelah learning, sistem masuk fase **EXPLOIT MODE**
+        
+        Algoritma akan:
+        - Fokus ke audience yang paling profitable
+        - Naikkan distribusi ke segmen itu
+        - Kurangi yang tidak perform
+        
+        > 🔥 **Ini yang disebut:** "Scaling otomatis oleh AI"
+        """)
+    
+    # Poin 7
+    with st.expander("📉 7. KENAPA IKLAN BISA DROP?", expanded=False):
+        st.markdown("""
+        **Karena algoritma bukan statis**
+        
+        | Penyebab | Penjelasan |
+        |----------|------------|
+        | Audience fatigue | Audience yang sama sudah jenuh |
+        | Kompetitor naik | Auction jadi lebih mahal |
+        | Data berubah | Buyer behavior berubah |
+        
+        > 🔥 **Yang terjadi di sistem:** AI harus cari ulang pola → perform drop sementara
+        """)
+    
+    # Poin 8
+    with st.expander("🧠 8. HUBUNGAN PRODUK DENGAN ALGORITMA", expanded=False):
+        st.markdown("""
+        **Ini yang sering diremehkan!**
+        
+        Algoritma **TIDAK bisa menyelamatkan produk jelek**
+        
+        Kenapa? Karena:
+        - CTR rendah → sistem stop distribusi
+        - CVR rendah → dianggap tidak layak
+        
+        > 🔥 **Jadi:** Produk = bahan bakar, Algoritma = mesin. Kalau bahan bakar jelek → mesin gak jalan
+        """)
+    
+    # Poin 9
+    with st.expander("🎯 9. FLOW KERJA ALGORITMA (END-TO-END)", expanded=False):
+        st.markdown("""
+        **Versi paling ringkas tapi dalam:**
+        
+        1. Iklan jalan
+        2. Sistem tes audience
+        3. Ukur CTR → tertarik?
+        4. Ukur CVR → beli?
+        5. Hitung CPA
+        6. Bandingkan dengan target ROAS
+        7. Kalau cocok → scale / Kalau tidak → stop distribusi
+        """)
+    
+    # Poin 10
+    with st.expander("🔥 10. RUMUS BESAR GMV MAX (VERSI SISTEM)", expanded=False):
+        st.markdown("""
+        **Yang sebenarnya terjadi:**
+        
+        ```
+        Profit = (CTR × CVR × AOV) – CPA
+        ```
+        
+        **Tapi sistem menyederhanakan jadi:**
+        
+        > "Apakah ROAS tercapai?"
+        """)
+    
+    # Poin 11
+    with st.expander("⚠️ 11. KESALAHAN YANG BERTENTANGAN DENGAN ALGORITMA", expanded=False):
+        st.markdown("""
+        **Ini penting banget!**
+        
+        | ❌ Kesalahan | ✅ Yang Benar |
+        |--------------|---------------|
+        | Terlalu sering edit | Biarkan sistem belajar (3-5 hari) |
+        | Fokus ROAS tinggi dari awal | Mulai dengan ROAS sedang untuk kumpulkan data |
+        | Budget terlalu kecil | Pastikan budget cukup untuk sampling |
+        | Produk belum valid | Validasi produk dulu sebelum iklan |
+        """)
+    
+    # Poin 12
+    with st.expander("🔥 12. KESIMPULAN BESAR", expanded=False):
+        st.markdown("""
+        **Cara berpikir yang benar:**
+        
+        Kamu bukan "ngontrol iklan"
+        
+        Kamu "ngontrol input agar algoritma bekerja optimal"
+        
+        **3 kontrol utama kamu:**
+        - **ROAS** → arahkan kualitas
+        - **Budget** → atur volume
+        - **Produk & konten** → tentukan hasil
+        """)
+    
+    # Penutup
     st.markdown("""
-    ### 📌 Apa itu GMV Max?
-    **GMV Max** adalah strategi iklan untuk memaksimalkan **Gross Merchandise Value** (total penjualan kotor) melalui platform TikTok Shop dan Shopee.
-    
-    ---
-    
-    ### 🎯 Strategi Beriklan TikTok Shop untuk Pemula
-    
-    #### 1. Budget Harian Ideal
-    | Level | Budget Harian | Target ROAS |
-    |-------|---------------|-------------|
-    | Pemula | Rp50.000 - Rp100.000 | 3x - 4x |
-    | Menengah | Rp150.000 - Rp300.000 | 4x - 5x |
-    | Lanjutan | Rp500.000+ | 5x - 7x |
-    
-    #### 2. Waktu Terbaik Pasang Iklan
-    - ⏰ **Pagi:** 07.00 - 09.00 (orang bersiap kerja/sekolah)
-    - 🍽️ **Siang:** 12.00 - 13.00 (jam istirahat)
-    - 🌙 **Malam:** 19.00 - 22.00 (waktu santai, intensitas tinggi)
-    
-    #### 3. Tips Memilih Produk untuk GMV Max
-    - ✅ Harga jual Rp50.000 - Rp200.000 (mudah konversi)
-    - ✅ Margin minimal 40%
-    - ✅ Stok mencukupi (minimal 100 pcs)
-    - ✅ Punya review minimal 10 bintang 4-5
-    
-    ---
-    
-    ### 🎯 Strategi Beriklan Shopee untuk Pemula
-    
-    #### 1. Setting Iklan Produk
-    - **Kata Kunci:** Gunakan 10-15 keyword relevan
-    - **Target Audiens:** Sesuaikan dengan usia & gender pembeli
-    - **Budget Harian:** Mulai dari Rp50.000
-    
-    #### 2. Optimasi Konversi
-    - 📸 Foto produk: 5-10 foto dari berbagai sudut
-    - 📝 Deskripsi: Sertakan manfaat, spesifikasi, size chart
-    - ⭐ Rating: Minimal 4.5 bintang
-    - 💬 Respon chat: Dalam 1 jam
-    
-    ---
-    
-    ### 💡 Tips & Trik GMV Max
-    
-    | Tips | Penjelasan |
-    |------|------------|
-    | **Hook 3 Detik** | 3 detik pertama video harus BIKIN PENASARAN |
-    | **CTA Kuat** | "Klik link di bio!", "Buruan stok terbatas!" |
-    | **Testimoni** | Tampilkan video unboxing dari pembeli |
-    | **Follow Up** | Chat buyer tanya kepuasan, minta rating |
-    | **Retargeting** | Pasang iklan ulang untuk yang sudah klik tapi belum beli |
-    
-    ---
-    
-    ### 📈 Target ROAS Ideal Berdasarkan Margin
-    
-    | Margin Produk | Target ROAS Minimal | Target ROAS Ideal |
-    |---------------|---------------------|-------------------|
-    | 30% - 40% | 3.0x | 4.0x |
-    | 40% - 50% | 2.5x | 3.5x |
-    | 50% - 60% | 2.0x | 3.0x |
-    | 60%+ | 1.8x | 2.5x |
-    
-    ---
-    
-    ### ⚠️ Kesalahan Umum Pemula
-    
-    1. ❌ Budget terlalu kecil (<Rp30.000/hari) → data tidak cukup
-    2. ❌ Target ROAS terlalu tinggi (>7x) → iklan tidak akan jalan
-    3. ❌ Video tanpa hook → viewer scroll dalam 1 detik
-    4. ❌ Tidak follow up chat buyer → peluang repeat order hilang
-    
-    ---
-    
-    ### 🚀 Next Step Setelah GMV Max Berhasil
-    
-    1. ✅ Naikkan budget 20-30% setiap 3 hari
-    2. ✅ Buat 3-5 variasi kreatif iklan baru
-    3. ✅ Ekspansi ke produk lain dalam niche yang sama
-    4. ✅ Bangun komunitas (Group Telegram/WhatsApp)
-    """)
+    <div class="gmv-quote">
+    💡 <strong>Inti Satu Kalimat:</strong><br>
+    GMV Max adalah sistem distribusi traffic berbasis probabilitas pembelian yang dikontrol oleh constraint ROAS dan diberi makan oleh data CTR & CVR.
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -802,12 +895,12 @@ def render_generator():
     tab1, tab2, tab3, tab4 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook Video", "#️⃣ Hashtag"])
     
     with tab1:
-        with st.container():
-            p_name = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="seo_name")
-            if st.button("✨ Generate SEO Title", key="gen_seo", use_container_width=True):
-                with st.spinner("🧠 AI copywriter sedang merancang judul..."):
-                    if p_name:
-                        prompt = f"""[System: Premium E-commerce SEO Specialist]
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        p_name = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="seo_name")
+        if st.button("✨ Generate SEO Title", key="gen_seo", use_container_width=True):
+            with st.spinner("🧠 AI copywriter sedang merancang judul..."):
+                if p_name:
+                    prompt = f"""[System: Premium E-commerce SEO Specialist]
 Role: Senior Copywriter untuk TikTok Shop & Shopee.
 Task: Buat 5 judul produk dengan FORMULA WAJIB:
 
@@ -819,30 +912,29 @@ Aturan:
 1. Setiap judul HARUS mengikuti formula di atas (4 elemen wajib ada)
 2. Tambahkan 1 emoji di awal judul
 3. Maksimal 70 karakter
-4. Manfaat: fokus ke solusi masalah atau keunggulan produk
-5. Output langsung 5 judul, satu per baris, tanpa penjelasan
+4. Output langsung 5 judul, satu per baris, tanpa penjelasan
 
 Contoh format:
 🔥 Kaos Oversize Premium | Atasan Wanita | Katun Combed 30s | Adem Tidak Panas
-✨ Jaket Parka Pria | Outer Musim Hujan | Waterproof | Anti Angin Dingin
 
 Output:"""
-                        res = call_gemini_api(prompt)
-                        if res:
-                            st.code(res, language="text")
-                        else:
-                            st.code(f"🔥 {p_name} | Fashion | Premium Quality | Best Seller\n✨ {p_name} | Atasan | Bahan Adem | Nyaman Dipakai", language="text")
+                    res = call_gemini_api(prompt)
+                    if res:
+                        st.code(res, language="text")
                     else:
-                        st.warning("Masukkan nama produk.")
+                        st.code(f"🔥 {p_name} | Fashion | Premium Quality | Best Seller", language="text")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab2:
-        with st.container():
-            p_name_desc = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="desc_name")
-            manfaat = st.text_area("Manfaat (pisahkan koma)", placeholder="Contoh: adem, nyaman, tidak panas, anti kusut", key="manfaat_desc")
-            if st.button("✨ Generate Deskripsi", key="gen_desc", use_container_width=True):
-                with st.spinner("🧠 AI copywriter sedang menulis deskripsi..."):
-                    if p_name_desc:
-                        prompt = f"""[System: Premium E-commerce Copywriter]
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        p_name_desc = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="desc_name")
+        manfaat = st.text_area("Manfaat (pisahkan koma)", placeholder="Contoh: adem, nyaman, tidak panas, anti kusut", key="manfaat_desc")
+        if st.button("✨ Generate Deskripsi", key="gen_desc", use_container_width=True):
+            with st.spinner("🧠 AI copywriter sedang menulis deskripsi..."):
+                if p_name_desc:
+                    prompt = f"""[System: Premium E-commerce Copywriter]
 Role: Senior Brand Manager for Fashion & Lifestyle.
 Task: Write a high-conversion product description for '{p_name_desc}'.
 
@@ -857,60 +949,57 @@ Structure Guidelines:
 6. Trust Signals: ✦ BRAND STANDARDS ✦
 7. Logistics & CTA: Shipping info and Unboxing requirement.
 
-Style: Clean, professional, minimalis, focus on 'Modern Women' aesthetic.
-Constraint: Use clear separators (✦), professional emojis, and Indonesian language.
+Style: Clean, professional, minimalis.
 Output: Direct full description only."""
-                        res = call_gemini_api(prompt)
-                        if res:
-                            st.code(res, language="markdown")
-                        else:
-                            st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium, nyaman dipakai'}\n🔥 Promo terbatas! KLIK SEKARANG!", language="markdown")
+                    res = call_gemini_api(prompt)
+                    if res:
+                        st.code(res, language="markdown")
                     else:
-                        st.warning("Masukkan nama produk.")
+                        st.code(f"✨ {p_name_desc} - Kualitas Premium!\n✅ {manfaat if manfaat else 'Bahan premium, nyaman dipakai'}", language="markdown")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab3:
-        with st.container():
-            p_name_hook = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hook_name")
-            gaya = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="gaya_hook")
-            if st.button("✨ Generate Hook Video", key="gen_hook", use_container_width=True):
-                with st.spinner("🧠 AI creative director sedang membuat hook..."):
-                    if p_name_hook:
-                        prompt = f"""[System: Creative Director TikTok]
-Role: Expert in viral hooks for TikTok Shop.
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        p_name_hook = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hook_name")
+        gaya = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="gaya_hook")
+        if st.button("✨ Generate Hook Video", key="gen_hook", use_container_width=True):
+            with st.spinner("🧠 AI creative director sedang membuat hook..."):
+                if p_name_hook:
+                    prompt = f"""[System: Creative Director TikTok]
 Task: Buat 5 hook 3 detik pertama untuk produk '{p_name_hook}' dengan gaya {gaya}.
 
 Aturan:
 - Hook harus bikin orang BERHENTI SCROLL
 - Maksimal 10 kata per hook
 - Format: [Masalah] + [Solusi] + [Urgency]
-- Target: retention rate tinggi
 
 Contoh:
 - "Capek cari kaos adem? STOP! Ini solusinya!"
 - "DISKON 50% HARI INI! Buruan!"
 
 Output: Langsung 5 hook, satu per baris, tanpa penjelasan."""
-                        res = call_gemini_api(prompt)
-                        if res:
-                            for line in res.strip().split('\n'):
-                                if line.strip():
-                                    st.markdown(f"- 🎬 {line.strip()}")
-                        else:
-                            st.markdown(f"- 🎬 😫 Capek cari {p_name_hook}? STOP!")
-                            st.markdown(f"- 🎬 🔥 DISKON 50% {p_name_hook}!")
-                            st.markdown(f"- 🎬 🏆 {p_name_hook} BEST SELLER!")
+                    res = call_gemini_api(prompt)
+                    if res:
+                        for line in res.strip().split('\n'):
+                            if line.strip():
+                                st.markdown(f"- 🎬 {line.strip()}")
                     else:
-                        st.warning("Masukkan nama produk.")
+                        st.markdown(f"- 🎬 😫 Capek cari {p_name_hook}? STOP!")
+                        st.markdown(f"- 🎬 🔥 DISKON 50% {p_name_hook}!")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab4:
-        with st.container():
-            p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
-            niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
-            if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
-                with st.spinner("🧠 AI trend analyst sedang meracik hashtag..."):
-                    if p_name_hash:
-                        prompt = f"""[System: Trend Analyst TikTok]
-Role: Hashtag Specialist for TikTok Shop.
+        st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
+        niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
+        if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
+            with st.spinner("🧠 AI trend analyst sedang meracik hashtag..."):
+                if p_name_hash:
+                    prompt = f"""[System: Trend Analyst TikTok]
 Task: Buat 20 hashtag untuk produk '{p_name_hash}', niche {niche_hash}.
 
 Kombinasi:
@@ -920,13 +1009,14 @@ Kombinasi:
 - 5 lokasi/event hashtag (#promo #diskon #gratisongkir)
 
 Output: Langsung 20 hashtag dalam satu baris, dipisah spasi."""
-                        res = call_gemini_api(prompt)
-                        if res:
-                            st.code(res, language="text")
-                        else:
-                            st.code("#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon #murah #berkualitas #premium", language="text")
+                    res = call_gemini_api(prompt)
+                    if res:
+                        st.code(res, language="text")
                     else:
-                        st.warning("Masukkan nama produk.")
+                        st.code("#fyp #viral #rekomendasi #shopee #tiktokshop #promo #diskon", language="text")
+                else:
+                    st.warning("Masukkan nama produk.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== HALAMAN DATABASE ====================
 def render_database():
@@ -998,26 +1088,6 @@ def render_database():
                     st.info("Belum ada produk tersimpan.")
 
 # ==================== RENDER PAGE ====================
-# Bottom navigation (menggunakan radio untuk menghindari JS)
-nav_cols = st.columns(4)
-nav_items = [
-    {"page": "dashboard", "icon": "🏠", "label": "Dashboard"},
-    {"page": "gmvmax", "icon": "🚀", "label": "GMV Max"},
-    {"page": "generator", "icon": "✨", "label": "Generator"},
-    {"page": "database", "icon": "📦", "label": "Database"}
-]
-
-for idx, nav in enumerate(nav_items):
-    with nav_cols[idx]:
-        is_active = st.session_state.current_page == nav["page"]
-        button_style = "primary" if is_active else "secondary"
-        if st.button(f"{nav['icon']} {nav['label']}", key=f"nav_{nav['page']}", use_container_width=True):
-            st.session_state.current_page = nav["page"]
-            st.rerun()
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# Tampilkan halaman sesuai pilihan
 if st.session_state.current_page == "dashboard":
     render_dashboard()
 elif st.session_state.current_page == "gmvmax":
@@ -1029,9 +1099,17 @@ elif st.session_state.current_page == "database":
 
 # ==================== FOOTER ====================
 st.markdown("""
-<div style="text-align: center; padding: 40px 20px 20px 20px; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1);">
+<div class="custom-footer">
     <p style="color: #94A3B8; font-size: 0.8rem;">
         Powered by <span style="color: #00E5A0; font-weight: bold;">Arkidigital</span> © 2025
     </p>
+    <form action="" method="post">
+        <button type="submit" name="logout" class="logout-btn">🚪 LOGOUT</button>
+    </form>
 </div>
 """, unsafe_allow_html=True)
+
+# Logout logic
+if st.button("🚪 LOGOUT", key="logout_footer"):
+    st.session_state.clear()
+    st.rerun()
