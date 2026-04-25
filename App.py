@@ -407,13 +407,22 @@ def import_products(file):
 # ==================== FUNGSI REKOMENDASI (TIDAK DIUBAH) ====================
 
 def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_set, target_roas, budget_spent, ctr):
-    """Menghasilkan rekomendasi berdasarkan aturan 1-5"""
+    """Menghasilkan rekomendasi berdasarkan aturan 1-5 + analisa tambahan"""
     rekom_tindakan = ""
     rekom_roas = target_roas
     rekom_budget = budget_set
     prioritas = ""
     warna = "info"
+    analisa_tambahan = ""
     
+    # Hitung metrik tambahan
+    cvr = (orders / clicks * 100) if clicks > 0 else 0
+    profit_margin = (roas_aktual - roas_bep) / roas_bep * 100 if roas_bep > 0 else 0
+    sisa_budget = budget_set - budget_spent if budget_set > budget_spent else 0
+    
+    # ========== PRIORITAS 1-5 (LENGKAP) ==========
+    
+    # PRIORITAS 1: URGENT STOP IKLAN
     if clicks > 50 and s_rate >= 80 and orders == 0:
         prioritas = "🔴 PRIORITAS 1 - URGENT (Stop Iklan)"
         warna = "danger"
@@ -428,10 +437,11 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 1. Cek harga produk — bandingkan dengan kompetitor
 2. Tambah review & rating (target 10-20 review positif)
 3. Perbaiki deskripsi — fokus ke MANFAAT
-4. Pastikan sudah ikut promo campaign dan flash sale
+4. Pastikan stok aman
 
 **Setelah produk siap, restart iklan dengan budget kecil (Rp50-100rb/hari).**"""
     
+    # PRIORITAS 4: SIAP SCALE
     elif s_rate >= 85 and roas_aktual >= roas_bep * 1.2:
         prioritas = "🟢 PRIORITAS 4 - SIAP SCALE"
         warna = "success"
@@ -445,36 +455,62 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 ✅ Naikkan **BUDGET 30%** menjadi {format_rp(rekom_budget)}
 ✅ **PERTAHANKAN** target ROAS di {target_roas:.1f}x
 
-⏰ **Tunggu 3 hari** tanpa perubahan apapun."""
+⏰ **Tunggu 3 hari** tanpa perubahan apapun untuk melihat hasil scale."""
     
+    # PRIORITAS 2: OPTIMASI BUDGET (Turunkan 1 poin, tunggu 3-7 hari)
     elif roas_aktual >= roas_bep and s_rate < 85:
         prioritas = "🟡 PRIORITAS 2 - OPTIMASI"
         warna = "warning"
-        rekom_roas = target_roas - 0.5
+        rekom_roas = target_roas - 1
         rekom_tindakan = f"""⚡ **OPTIMASI BUDGET**
 
 ✅ ROAS {roas_aktual:.1f}x ≥ BEP {roas_bep:.1f}x (untung)
-📊 Budget terserap {s_rate:.0f}% (masih ada sisa Rp{budget_set - budget_spent:,.0f})
+📊 Budget terserap {s_rate:.0f}% (masih ada sisa Rp{sisa_budget:,.0f})
 
 **Agar budget habis dan order maksimal:**
-✅ Turunkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
+✅ Turunkan target ROAS **1 poin** menjadi **{rekom_roas:.1f}x**
 ✅ **JANGAN UBAH BUDGET** (tetap {format_rp(budget_set)})
 
-⏰ **Tunggu 3 hari** tanpa perubahan apapun."""
+⏰ **Tunggu 3-7 hari** dengan setting baru ini, evaluasi lagi setelah 3-7 hari."""
     
+    # PRIORITAS 3: IKLAN RUGI (Dua skenario)
     elif roas_aktual < roas_bep and roas_aktual > 0:
-        prioritas = "🔴 PRIORITAS 3 - IKLAN RUGI"
-        warna = "danger"
-        rekom_roas = roas_bep + 0.5
-        rekom_budget = budget_set * 0.7
-        rekom_tindakan = f"""💸 **IKLAN RUGI!**
+        # Cek apakah budget cepat habis (s_rate >= 80)
+        if s_rate >= 80:
+            prioritas = "🔴 PRIORITAS 3A - IKLAN RUGI (Budget Cepat Habis)"
+            warna = "danger"
+            rekom_roas = target_roas + 1
+            rekom_budget = budget_set
+            rekom_tindakan = f"""💸 **IKLAN RUGI - BUDGET CEPAT HABIS!**
+
+📉 ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
+💰 Budget terserap {s_rate:.0f}% (cepat habis)
+
+**Penyebab:** Target ROAS terlalu rendah → sistem terlalu agresif, traffic kurang berkualitas.
+
+**Solusi:**
+✅ Naikkan target ROAS **1 poin** menjadi **{rekom_roas:.1f}x**
+✅ **PERTAHANKAN** budget tetap {format_rp(budget_set)}
+
+⏰ **Tunggu 3 hari**, jika masih cepat habis dan rugi → naikkan lagi 1 poin.
+
+Target: Agar budget habis dalam 1 hari dengan ROAS ≥ BEP"""
+        else:
+            prioritas = "🔴 PRIORITAS 3B - IKLAN RUGI (Umum)"
+            warna = "danger"
+            rekom_roas = roas_bep + 0.5
+            rekom_budget = budget_set * 0.7
+            rekom_tindakan = f"""💸 **IKLAN RUGI!**
 
 📉 ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
 
 **Solusi:**
 ✅ Naikkan target ROAS **0.5 poin** menjadi **{rekom_roas:.1f}x**
-🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian"""
+🔻 Turunkan budget **30%** menjadi {format_rp(rekom_budget)} untuk mengurangi kerugian
+
+⏰ **Tunggu 3 hari** lalu evaluasi ulang."""
     
+    # PRIORITAS 5: PERFORMA SEHAT (Default)
     elif roas_aktual >= roas_bep:
         prioritas = "🟢 PRIORITAS 5 - PANTAU"
         rekom_tindakan = f"""✅ **PERFORMA SEHAT**
@@ -486,15 +522,116 @@ def generate_rekomendasi(roas_aktual, roas_bep, s_rate, clicks, orders, budget_s
 ✅ Pertahankan setting saat ini
 ⏰ Pantau selama **3-5 hari** tanpa perubahan"""
     
-    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan:
-        rekom_tindakan += f"""
+    else:
+        prioritas = "ℹ️ PERLU DATA LEBIH LENGKAP"
+        warna = "info"
+        rekom_tindakan = f"""📊 **Data Belum Cukup**
 
+Mohon isi data performa iklan dengan lengkap:
+- Pastikan Impressions > 0
+- Pastikan Budget Spent > 0
+- Pastikan Budget Setting > 0
+
+Setelah data lengkap, klik RUN ANALYTICS lagi."""
+    
+    # ========== ANALISA TAMBAHAN (TIDAK MENGUBAH PRIORITAS) ==========
+    
+    # Analisa 1: CTR bagus (>3%) & CVR = 0
+    if ctr > 3 and cvr == 0 and orders == 0:
+        analisa_tambahan += f"""
+---
+📊 **ANALISA STUDI KASUS: Klik Tinggi, Order Nol**
+
+🔍 Data: CTR {ctr:.1f}% (>3% bagus) tapi {clicks} klik tidak menghasilkan order.
+
+💡 **Apa yang terjadi?**
+Klik tinggi = iklan MENARIK
+Tapi gak ada yang beli = PRODUK BERMASALAH
+
+👉 Kemungkinan penyebab:
+• Harga kalah bersaing dengan kompetitor
+• Belum dapat kepercayaan pembeli (minim review/rating)
+• Deskripsi produk lemah (tidak menjelaskan manfaat)
+
+🎯 **Solusi:**
+✅ Perbaiki fondasi produk sebelum lanjut iklan
+✅ Bandingkan harga dengan kompetitor
+✅ Kumpulkan 10-20 review positif
+✅ Perkuat deskripsi (fokus ke MANFAAT, bukan fitur)"""
+    
+    # Analisa 2: CTR rendah (<2%) & ROAS < BEP
+    elif ctr < 2 and roas_aktual < roas_bep and roas_aktual > 0:
+        analisa_tambahan += f"""
+---
+📊 **ANALISA STUDI KASUS: CTR Rendah, Iklan Mahal**
+
+🔍 Data: CTR {ctr:.1f}% (<2%) dan ROAS {roas_aktual:.1f}x < BEP {roas_bep:.1f}x
+
+💡 **Apa yang terjadi?**
+CTR rendah = iklan tidak menarik perhatian
+Iklan mahal = biaya per klik tinggi
+ROAS rugi = biaya tidak sebanding hasil
+
+👉 Masalah ada di **IKLAN**, bukan produk
+
+🎯 **Solusi:**
+✅ Ganti visual (foto utama / video hook 3 detik pertama)
+✅ Perbaiki hook dengan pertanyaan provokatif atau solusi masalah
+✅ Tambahkan CTA yang kuat (buruan, terbatas, diskon)
+✅ Buat 3-5 variasi kreatif baru untuk A/B testing"""
+    
+    # Analisa 3: ROAS sedikit di atas BEP (untung tipis, margin <20%)
+    elif profit_margin > 0 and profit_margin < 20 and roas_aktual > 0 and "SIAP SCALE" not in prioritas:
+        analisa_tambahan += f"""
+---
+📊 **ANALISA STUDI KASUS: Untung Tipis, Rawan Turun**
+
+🔍 Data: ROAS {roas_aktual:.1f}x hanya {profit_margin:.0f}% di atas BEP {roas_bep:.1f}x
+
+💡 **Apa yang terjadi?**
+🟡 Profit tipis = rawan berubah jadi rugi
+📉 Jika kompetitor naik atau biaya iklan naik, bisa boncos diam-diam
+
+🎯 **Solusi:**
+✅ Naikkan target ROAS **0.5-1 poin** untuk buffer
+✅ Pantau lebih ketat (setiap 2 hari, bukan 5 hari)
+✅ Cari cara efisiensi biaya (perbaiki CTR/CVR)"""
+    
+    # Analisa 4: Budget tidak habis (<50%) karena ROAS terlalu tinggi
+    elif s_rate < 50 and target_roas > roas_bep + 1 and roas_aktual > 0:
+        analisa_tambahan += f"""
+---
+📊 **ANALISA STUDI KASUS: Budget Tidak Habis**
+
+🔍 Data: Budget terserap hanya {s_rate:.0f}% dari {format_rp(budget_set)}
+Target ROAS: {target_roas:.1f}x (terlalu tinggi)
+
+💡 **Apa yang terjadi?**
+ROAS terlalu tinggi → sistem terlalu selektif
+Sistem cuma cari pembeli yang "paling pasti beli" 
+Akibatnya: traffic sedikit, budget tidak habis
+
+🎯 **Solusi:**
+✅ Turunkan target ROAS **0.5-1 poin**
+✅ Ini bukan masalah kurang budget, tapi terlalu selektif
+⏰ Setelah turun, tunggu 3 hari → budget akan terserap lebih banyak"""
+    
+    # Tambahan saran CTR rendah jika belum tercover
+    if ctr < 2 and clicks > 0 and "Stop Iklan" not in rekom_tindakan and "CTR rendah" not in analisa_tambahan and "belum layak" not in rekom_tindakan:
+        if analisa_tambahan:
+            analisa_tambahan += f"\n\n📸 **Tambahan:** CTR {ctr:.1f}% < 2% → Ganti visual iklan (foto utama / video hook)."
+        else:
+            analisa_tambahan += f"""
 ---
 📸 **MASALAH CTR RENDAH!**
 
 CTR {ctr:.1f}% < 2% → Iklan kurang menarik.
 
-**Solusi:** Ganti visual konten (foto produk slide kedua dan seterusnya / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
+**Solusi:** Ganti visual (foto utama / video hook 3 detik pertama). Buat 3 variasi kreatif baru."""
+    
+    # Gabungkan rekomendasi utama dengan analisa tambahan
+    if analisa_tambahan:
+        rekom_tindakan += analisa_tambahan
     
     return rekom_tindakan, rekom_budget, rekom_roas, prioritas, warna
 
