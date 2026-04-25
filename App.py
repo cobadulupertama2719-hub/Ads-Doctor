@@ -294,26 +294,59 @@ CHECKOUT_LINK = "https://muhammad-masruri.myscalev.com/checkout-pageku"
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
 def call_gemini_api(prompt):
-    """Panggil Gemini API via HTTP"""
+
+def call_gemini_api(prompt):
+    """Panggil Gemini API via HTTP - DEBUG VERSION"""
     if not GEMINI_API_KEY:
-        return None
+        return "❌ API Key tidak ditemukan di secrets"
+    
+    # Pakai model yang paling stabil
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ]
+    }
+    
     try:
-        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=30)
+        response = requests.post(url, json=data, headers=headers, timeout=30)
+        
+        # TAMPILKAN DETAIL ERROR DI SIDEBAR
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("**🤖 API Debug Info:**")
+        st.sidebar.write(f"Status Code: {response.status_code}")
+        
         if response.status_code == 200:
             result = response.json()
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-        return None
+            try:
+                text = result["candidates"][0]["content"]["parts"][0]["text"]
+                st.sidebar.success("✅ API berhasil!")
+                return text
+            except Exception as e:
+                st.sidebar.error(f"Parse error: {e}")
+                return f"❌ Gagal parsing response: {e}"
+        else:
+            st.sidebar.error(f"HTTP {response.status_code}")
+            st.sidebar.write(f"Response: {response.text[:300]}")
+            return f"❌ API Error {response.status_code}"
+            
+    except requests.exceptions.Timeout:
+        st.sidebar.error("⏰ Timeout (30 detik)")
+        return "❌ Timeout, coba lagi"
     except Exception as e:
-        return None
-
-def format_rp(angka):
-    if angka >= 1_000_000: 
-        return f"Rp{angka/1_000_000:.1f}JT"
-    if angka >= 1000: 
-        return f"Rp{angka/1000:.0f}RB"
-    return f"Rp{angka:,.0f}"
-
+        st.sidebar.error(f"Exception: {type(e).__name__}")
+        st.sidebar.write(f"Detail: {str(e)[:200]}")
+        return f"❌ Error: {str(e)[:100]}"
+        
 # ==================== DATABASE PRODUK ====================
 def save_product(p):
     products = st.session_state.products
