@@ -253,33 +253,14 @@ def apply_premium_style():
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid #334155;
         border-radius: 20px;
-        padding: 20px;
-        margin: 10px 0;
+        padding: 25px;
+        margin: 15px 0;
         transition: all 0.3s ease;
     }
     
     .generator-card:hover {
         border-color: #00E5A0;
         transform: translateY(-2px);
-    }
-    
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: rgba(15, 25, 45, 0.5);
-        border-radius: 40px;
-        padding: 6px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 32px;
-        padding: 8px 20px;
-        font-weight: 600;
-        color: #94A3B8 !important;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
-        color: #020617 !important;
     }
     
     .analytics-wrapper {
@@ -550,7 +531,6 @@ nav_items = [
 for idx, nav in enumerate(nav_items):
     with nav_cols[idx]:
         is_active = st.session_state.current_page == nav["page"]
-        button_style = "primary" if is_active else "secondary"
         if st.button(f"{nav['icon']} {nav['label']}", key=f"nav_{nav['page']}", use_container_width=True):
             st.session_state.current_page = nav["page"]
             st.rerun()
@@ -887,16 +867,19 @@ def render_gmvmax():
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== HALAMAN GENERATOR ====================
+# ==================== HALAMAN GENERATOR (VERTIKAL) ====================
 def render_generator():
     st.markdown("<h2 class='gold-header'>✨ Elite Copywriter Lab</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#94A3B8; margin-bottom:20px;'>Copywriting profesional ala ahli advertising 10 tahun</p>", unsafe_allow_html=True)
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📝 SEO Title", "📄 Deskripsi", "🎬 Hook Video", "#️⃣ Hashtag"])
-    
-    with tab1:
+    # ========== 1. SEO TITLE ==========
+    with st.container():
         st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### 📝 SEO Title")
+        st.markdown("Buat judul produk yang menarik dan SEO-friendly")
+        
         p_name = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="seo_name")
+        
         if st.button("✨ Generate SEO Title", key="gen_seo", use_container_width=True):
             with st.spinner("🧠 AI copywriter sedang merancang judul..."):
                 if p_name:
@@ -927,10 +910,15 @@ Output:"""
                     st.warning("Masukkan nama produk.")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with tab2:
+    # ========== 2. DESKRIPSI ==========
+    with st.container():
         st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### 📄 Deskripsi Produk")
+        st.markdown("Buat deskripsi produk yang persuasif dan informatif")
+        
         p_name_desc = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="desc_name")
         manfaat = st.text_area("Manfaat (pisahkan koma)", placeholder="Contoh: adem, nyaman, tidak panas, anti kusut", key="manfaat_desc")
+        
         if st.button("✨ Generate Deskripsi", key="gen_desc", use_container_width=True):
             with st.spinner("🧠 AI copywriter sedang menulis deskripsi..."):
                 if p_name_desc:
@@ -960,10 +948,15 @@ Output: Direct full description only."""
                     st.warning("Masukkan nama produk.")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with tab3:
+    # ========== 3. HOOK VIDEO ==========
+    with st.container():
         st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### 🎬 Hook Video")
+        st.markdown("Buat hook 3 detik pertama yang bikin orang berhenti scroll")
+        
         p_name_hook = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hook_name")
         gaya = st.selectbox("Gaya Hook", ["Problem Solver", "Diskon", "Bukti Sosial", "Curiosity", "Emosional"], key="gaya_hook")
+        
         if st.button("✨ Generate Hook Video", key="gen_hook", use_container_width=True):
             with st.spinner("🧠 AI creative director sedang membuat hook..."):
                 if p_name_hook:
@@ -992,10 +985,15 @@ Output: Langsung 5 hook, satu per baris, tanpa penjelasan."""
                     st.warning("Masukkan nama produk.")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with tab4:
+    # ========== 4. HASHTAG ==========
+    with st.container():
         st.markdown('<div class="generator-card">', unsafe_allow_html=True)
+        st.markdown("### #️⃣ Hashtag Viral")
+        st.markdown("Buat hashtag yang tepat sasaran dan viral")
+        
         p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
         niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
+        
         if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
             with st.spinner("🧠 AI trend analyst sedang meracik hashtag..."):
                 if p_name_hash:
@@ -1103,13 +1101,12 @@ st.markdown("""
     <p style="color: #94A3B8; font-size: 0.8rem;">
         Powered by <span style="color: #00E5A0; font-weight: bold;">Arkidigital</span> © 2025
     </p>
-    <form action="" method="post">
-        <button type="submit" name="logout" class="logout-btn">🚪 LOGOUT</button>
-    </form>
 </div>
 """, unsafe_allow_html=True)
 
-# Logout logic
-if st.button("🚪 LOGOUT", key="logout_footer"):
-    st.session_state.clear()
-    st.rerun()
+# Tombol logout di footer
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("🚪 LOGOUT", key="logout_footer", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
