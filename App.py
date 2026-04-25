@@ -890,7 +890,7 @@ Target: viral & engagement tinggi."""
     st.markdown('</div>', unsafe_allow_html=True)
 
 with tab4:
-    st.markdown('<div class="generator-card">, unsafe_allow_html=True)
+    st.markdown('<div class="generator-card">', unsafe_allow_html=True)
     p_name_hash = st.text_input("🏷️ Nama Produk", placeholder="Contoh: Kaos Oversize Premium", key="hash_name")
     niche_hash = st.selectbox("Niche", ["Fashion", "Kosmetik", "Makanan", "Elektronik", "Olahraga"], key="niche_hash")
     if st.button("✨ Generate Hashtag Viral", key="gen_hash", use_container_width=True):
