@@ -14,11 +14,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. CSS untuk menyembunyikan header default Streamlit
+# 2. CSS minimal - tombol sidebar tetap terlihat
 hide_st_style = """
 <style>
-#MainMenu {visibility: hidden;}
-header {visibility: hidden;}
 footer {visibility: hidden;}
 .stAppDeployButton {display:none;}
 [data-testid="stToolbar"] {display:none;}
@@ -243,7 +241,7 @@ def apply_premium_style():
         margin-top: 20px;
     }
 
-    /* ============ TOMBOL SIDEBAR KONTRAK DAN TERLIHAT JELAS ============ */
+    /* ============ TOMBOL SIDEBAR KONTRAK ============ */
     button[kind="header"] {
         background: linear-gradient(135deg, #00E5A0 0%, #00a878 100%) !important;
         border-radius: 50% !important;
