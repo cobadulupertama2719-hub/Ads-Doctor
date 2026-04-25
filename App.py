@@ -1,30 +1,14 @@
 import streamlit as st
 
-# Kode untuk menyembunyikan header dan toolbar (TAPI TOMBOL SIDEBAR TETAP MUNCUL)
+# Kode untuk menyembunyikan header dan toolbar
 hide_st_style = """
-<style>
-#MainMenu {visibility: hidden;}
-/* header {visibility: hidden;} */  /* ← DIKOMENTAR, BIAR TOMBOL SIDEBAR MUNCUL */
-footer {visibility: hidden;}
-.stAppDeployButton {display:none;}
-[data-testid="stToolbar"] {display:none;}
-
-/* MEMBUAT SIDEBAR FULL KE ATAS */
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
-    border-right: 2px solid rgba(0, 229, 160, 0.3) !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    top: 0 !important;
-    height: 100vh !important;
-}
-
-[data-testid="stSidebar"] > div:first-child {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-</style>
-"""
+            <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            .stAppDeployButton {display:none;}
+            </style>
+            """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
 import streamlit as st
