@@ -693,6 +693,69 @@ def analyze_batch_product(row):
     except Exception as e:
         return None
 
+# ==================== API ENDPOINT UNTUK EXTENSION ====================
+# Extension akan panggil URL: https://arkidigital.streamlit.app/?api=analyze&data={...}
+
+# Cek apakah ada parameter 'api' di URL
+if 'api' in st.query_params and st.query_params['api'] == 'analyze':
+    try:
+        # Ambil data dari parameter 'data'
+        data_json = st.query_params.get('data', '{}')
+        data = json.loads(data_json)
+        
+        # Ambil data dari extension
+        clicks = float(data.get('clicks', 0))
+        impressions = float(data.get('impressions', 0))
+        budget_spent = float(data.get('budget_spent', 0))
+        sales = float(data.get('sales', 0))
+        orders = float(data.get('orders', 0))
+        roas_aktual = float(data.get('roas', 0))
+        
+        # Default values
+        harga_jual = float(data.get('harga_jual', 150000))
+        modal = float(data.get('modal', 75000))
+        admin_persen = float(data.get('admin_persen', 20))
+        budget_set = float(data.get('budget_set', 200000))
+        target_roas = float(data.get('target_roas', 6.0))
+        
+        # Hitung ROAS BEP
+        laba_kotor = harga_jual - modal - (harga_jual * admin_persen / 100)
+        roas_bep = harga_jual / laba_kotor if laba_kotor > 0 else 999
+        
+        # Hitung s_rate
+        s_rate = (budget_spent / budget_set * 100) if budget_set > 0 else 0
+        
+        # Hitung CTR
+        ctr = (clicks / impressions * 100) if impressions > 0 else 0
+        
+        # Panggil fungsi generate_rekomendasi
+        rekom, rekom_budget, rekom_roas, prioritas, warna = generate_rekomendasi(
+            roas_aktual, roas_bep, s_rate, clicks, orders,
+            budget_set, target_roas, budget_spent, ctr
+        )
+        
+        # Format response
+        response = {
+            "status": "success",
+            "prioritas": prioritas,
+            "rekomendasi": rekom,
+            "rekom_budget": format_rp(rekom_budget),
+            "rekom_roas": rekom_roas,
+            "roas_aktual": round(roas_aktual, 2),
+            "roas_bep": round(roas_bep, 2),
+            "ctr": round(ctr, 2),
+            "profit": format_rp((laba_kotor * orders) - budget_spent if orders > 0 else -budget_spent)
+        }
+        
+        # Tampilkan JSON (bukan HTML)
+        st.json(response)
+        st.stop()
+    except Exception as e:
+        response = {"status": "error", "message": str(e)}
+        st.json(response)
+        st.stop()
+
+
 # ==================== LOGIN ====================
 if not st.session_state.authenticated:
     st.markdown('<div style="text-align:center; padding-top:50px;">', unsafe_allow_html=True)
